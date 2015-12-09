@@ -70,6 +70,7 @@
         </repository>
     </repositories>
 
+    <!-- docs start deps -->
     <dependencies>
         <dependency>
             <groupId>org.geotools</groupId>
@@ -87,4 +88,5 @@
             <version>${geotools.version}</version>
         </dependency>
     </dependencies>
+    <!-- docs end deps -->
 </project>

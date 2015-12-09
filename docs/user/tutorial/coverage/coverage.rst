@@ -110,7 +110,8 @@ factor in order to preserve
 
 Output
 ------
-Finally we'll use the **AbstractGridFormat** instance we retrieved earlier to save our tile.
+Finally we'll use the **AbstractGridFormat** instance we retrieved earlier to save our tile, plus
+finish off our class definition.
 
 .. literalinclude:: /../src/main/java/org/geotools/tutorial/coverage/ImageTiler.java
     :language: java
@@ -145,26 +146,14 @@ application.
 
 Running With Maven
 ------------------
-If you're not using an IDE then the easiest way to our application is to use the Maven Plugin plugin
-to build a jar for us, as detailed in the `GeoTools FAQ`_. We simply need to add the Maven Shade
+If you're not using an IDE then the easiest way to our application is to use the Maven exec task
+to run our application for us, as detailed in the `Maven Quickstart`_. We simply need to add the Maven Shade
 plugin to our pom.xml
 
 
-.. literalinclude:: artifacts/pom.xml
-    :language: xml
-    :start-after: <!-- docs build begin -->
-    :end-before: <!-- docs build begin -->
+  ``mvn exec:java -Dexec.mainClass=org.geotools.tutorial.ImageTiler -Dexec.args="-f /Users/devon/Downloads/NE2_50M_SR_W/NE2_50M_SR_W.tif -htc 16 -vtc 8 -o /Users/devon/tmp/tiles -scale 2.0"``
 
-Then build our uber jar with the following:
-
-  ``mvn clean package``
-
-This will create a single jar which we can then run (replacing the file arguments as appropriate)
-with
-
-  ``java -jar target/tutorial-0.0.1-SNAPSHOT.jar -f /Users/devon/Downloads/NE2_50M_SR_W/NE2_50M_SR_W.tif -htc 16 -vtc 8 -o /Users/devon/tmp/tiles -scale 2.0``
-
-.. _GeoTools FAQ: http://docs.geotools.org/stable/userguide/build/faq.html#how-do-i-create-an-executable-jar-for-my-geotools-app
+.. _Maven Quickstart: http://docs.geotools.org/latest/userguide/tutorial/quickstart/maven.html
 
 Extra Resources
 ===============
