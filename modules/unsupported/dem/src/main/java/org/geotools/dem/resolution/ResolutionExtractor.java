@@ -48,8 +48,7 @@ class ResolutionExtractor extends PropertiesCollector {
         try {
             resolutionLevels = gridCoverageReader.getResolutionLevels();
 
-            addMatch("" + resolutionLevels[0][0]);
-            addMatch("" + resolutionLevels[0][1]);       
+            addMatch("" + Math.max(resolutionLevels[0][0], resolutionLevels[0][1]));
         } catch (IOException e) {
             LOGGER.log(Level.WARNING, e.getMessage(), e);
         } 
@@ -61,7 +60,7 @@ class ResolutionExtractor extends PropertiesCollector {
         // get all the matches and convert them in doubles
         final List<Double> values = new ArrayList<Double>();
         for (String match : getMatches()) {
-            // try to convert to date
+            // try to convert to resolution
             try {
                 Double parsed = Double.parseDouble(match);
                 values.add(parsed);
@@ -85,7 +84,7 @@ class ResolutionExtractor extends PropertiesCollector {
             // set the property
             feature.setAttribute(propertyName, values.get(index++));
 
-            // do we have more dates?
+            // do we have more resolutions?
             if (index >= values.size())
                 return;
         }

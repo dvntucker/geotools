@@ -68,7 +68,7 @@ public class DEMFormat extends AbstractGridFormat implements Format {
      *  <p>It does work only with DBMS as indexes
      */
     public static final ParameterDescriptor<String> SORT_BY = new DefaultParameterDescriptor<String>("SORTING", String.class, null, 
-            "resX A, resY A, date D");
+            "resolution A, date D");
     
     private OutliersMaskProcess outliersProcess = new OutliersMaskProcess();
 
@@ -123,8 +123,7 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                     featureBuilder.add("the_geom", Polygon.class, actualCRS);
                     featureBuilder.setDefaultGeometry("the_geom");
                     addAttributes("date", featureBuilder, Date.class);                    
-                    addAttributes("resX", featureBuilder, Double.class);
-                    addAttributes("resY", featureBuilder, Double.class);
+                    addAttributes("resolution", featureBuilder, Double.class);
                     
                     
                     return featureBuilder.buildFeatureType();
@@ -142,15 +141,9 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                     
                     Collector collectorX = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
                     collectorX.setSpi("ResolutionExtractorSPI");
-                    collectorX.setMapped("resX");  
+                    collectorX.setMapped("resolution");  
                     collectorX.setValue("");
                     list.add(collectorX);
-                    
-                    Collector collectorY = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
-                    collectorY.setSpi("ResolutionExtractorSPI");
-                    collectorY.setMapped("resY");   
-                    collectorY.setValue("");                 
-                    list.add(collectorY);       
                     
                     return list;
                 }
