@@ -26,6 +26,8 @@ import java.awt.image.Raster;
 import java.awt.image.RenderedImage;
 import java.awt.image.SampleModel;
 import java.awt.image.WritableRaster;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.media.jai.Histogram;
 import javax.media.jai.JAI;
@@ -38,6 +40,7 @@ import org.geotools.process.factory.DescribeParameter;
 import org.geotools.process.factory.DescribeProcess;
 import org.geotools.process.factory.DescribeResult;
 import org.geotools.process.raster.RasterProcess;
+import org.geotools.resources.coverage.CoverageUtilities;
 import org.jaitools.tiledimage.DiskMemImage;
 
 /**
@@ -77,6 +80,13 @@ public class OutliersMaskProcess implements RasterProcess {
         }
     }
     
+
+    public enum OutputMethod {
+        OnlyMask, AlphaMask, NoDataMask
+    }
+    
+
+    private final static double NO_DATA = Double.NaN;    
     private final static GridCoverageFactory coverageFac = new GridCoverageFactory();
     
     @DescribeResult(name = "result", description = "Outliers mask image")
@@ -87,7 +97,8 @@ public class OutliersMaskProcess implements RasterProcess {
             @DescribeParameter(name = "windowsize", description = "Window size (default = 500)", min = 0, defaultValue = "500") int windowSize,
             @DescribeParameter(name = "low", description = "Lower boundary value (pixels < will be ignored)", min = 0) Double low,
             @DescribeParameter(name = "high", description = "Upper boundary value (pixels > will be ignored)", min = 0) Double high,
-            @DescribeParameter(name = "alpha", description = "Copy image and add alpha mask (default = false)", min = 0, defaultValue = "false") boolean asAlpha,
+            @DescribeParameter(name = "outputMethod", description = "Return only mask (default) or copy image and add alpha/nodata mask", min = 0, defaultValue = "OnlyMask") OutputMethod outputMethod,
+            @DescribeParameter(name = "nodata value", description = "NODATA value (default = NaN)", min = 0) Double nodata,
             @DescribeParameter(name = "statisticMethod", description = "Statistic method for determining outliers (default = InterquartileRange)", 
                 min = 0, defaultValue = "InterquartileRange") StatisticMethod statisticMethod) {
         
@@ -97,17 +108,20 @@ public class OutliersMaskProcess implements RasterProcess {
         if (high == null) {
             high = Double.POSITIVE_INFINITY;
         }
+        if (nodata == null) {
+            nodata = NO_DATA;
+        }
         
         final RenderedImage image = coverage.getRenderedImage();
         
         ColorModel cm;
-        if (asAlpha) {
-            cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
-                   true, false, Transparency.BITMASK, DataBuffer.TYPE_FLOAT);
-            
-        } else {
-            cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
-                    false, true, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);
+        switch (outputMethod) {
+        case AlphaMask: cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
+                true, false, Transparency.BITMASK, DataBuffer.TYPE_FLOAT); break;
+        case NoDataMask: cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
+                false, false, Transparency.OPAQUE, DataBuffer.TYPE_FLOAT); break;
+        default: cm = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_GRAY),
+                false, false, Transparency.OPAQUE, DataBuffer.TYPE_BYTE);         
         }
         SampleModel sm = cm.createCompatibleSampleModel(windowSize, windowSize);
         DiskMemImage resultImage = new DiskMemImage(0, 0, image.getWidth(), image.getHeight(),
@@ -136,15 +150,17 @@ public class OutliersMaskProcess implements RasterProcess {
                 
                 //create result raster
                 WritableRaster resultData = resultImage.getWritableTile(i, j);
-                if (asAlpha) {
+                if (outputMethod != OutputMethod.OnlyMask) {
                     //copy it all
                     for (int x = (int) window.getMinX(); x < window.getMaxX(); x++) {
                         for (int y = (int) window.getMinY(); y < window.getMaxY(); y++) {
                             final double pixel = data.getSampleDouble(x, y, band);
                             resultData.setSample(x - image.getMinX(), y - image.getMinY(), 0, pixel);
                         }
-                    }                    
-                    resultData = cm.getAlphaRaster(resultData);
+                    }            
+                    if (outputMethod == OutputMethod.AlphaMask) {
+                        resultData = cm.getAlphaRaster(resultData);
+                    }
                 }
                                 
                 if (max > min) {
@@ -165,18 +181,34 @@ public class OutliersMaskProcess implements RasterProcess {
                     for (int x = (int) window.getMinX(); x < window.getMaxX(); x++) {
                         for (int y = (int) window.getMinY(); y < window.getMaxY(); y++) {
                             final double pixel = data.getSampleDouble(x, y, band);
-                            resultData.setSample(x - image.getMinX(), y - image.getMinY(), 0,
+                            if (outputMethod == OutputMethod.NoDataMask) {
+                                if (pixel < lowerBound || pixel > upperBound) {
+                                    resultData.setSample(x - image.getMinX(), y - image.getMinY(), 0, nodata);
+                                }
+                            } else {
+                                resultData.setSample(x - image.getMinX(), y - image.getMinY(), 0,
                                     pixel >= lowerBound && pixel <= upperBound ? 0xFF : 0x00);
+                            }
                         }
                     }
                 } else {
                     final boolean letThrough = min >= low && min <= high;
               
                     //create mask for this window
-                    for (int x = (int) window.getMinX(); x < window.getMaxX(); x++) {
-                        for (int y = (int) window.getMinY(); y < window.getMaxY(); y++) {
-                            resultData.setSample(x - image.getMinX(), y - image.getMinY(), 0,
-                                   letThrough ? 0xFF : 0x00);
+                    if (outputMethod == OutputMethod.NoDataMask) {
+                        if (!letThrough) {
+                            for (int x = (int) window.getMinX(); x < window.getMaxX(); x++) {
+                                for (int y = (int) window.getMinY(); y < window.getMaxY(); y++) {
+                                    resultData.setSample(x - image.getMinX(), y - image.getMinY(), 0, nodata);
+                                }
+                            }
+                        }                        
+                    } else {
+                        for (int x = (int) window.getMinX(); x < window.getMaxX(); x++) {
+                            for (int y = (int) window.getMinY(); y < window.getMaxY(); y++) {
+                                resultData.setSample(x - image.getMinX(), y - image.getMinY(), 0,
+                                       letThrough ? 0xFF : 0x00);
+                            }
                         }
                     }
                 }
@@ -184,7 +216,13 @@ public class OutliersMaskProcess implements RasterProcess {
                 resultImage.releaseWritableTile(i, j);
             }
         }
-        return coverageFac.create("mask", resultImage, coverage.getEnvelope());
+        
+        Map<String, Object> properties = null;        
+        if (outputMethod == OutputMethod.NoDataMask) {
+            properties = new HashMap<String, Object>();
+            CoverageUtilities.setNoDataProperty(properties, nodata);
+        }
+        return coverageFac.create("mask", resultImage, coverage.getEnvelope(), null, null, properties);
     }
 
 }

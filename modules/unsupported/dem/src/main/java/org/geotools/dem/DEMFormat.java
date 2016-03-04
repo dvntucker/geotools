@@ -171,7 +171,8 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                         final List<PropertiesCollector> propertiesCollectors) throws IOException {
                     
                     GridCoverage2D coverage = inputReader.read(null);
-                    GridCoverage2D maskedCoverage = outliersProcess.execute(coverage, 0, 10.0, 1000, 1.0, null, true, 
+                    GridCoverage2D maskedCoverage = outliersProcess.execute(coverage, 0, 10.0, 1000, 1.0, null, 
+                            OutliersMaskProcess.OutputMethod.NoDataMask, null,
                             OutliersMaskProcess.StatisticMethod.InterquartileRange);
                     GeoTiffWriter writer = new GeoTiffWriter(getMaskedFile(fileBeingProcessed));
                     writer.write(maskedCoverage, null);
