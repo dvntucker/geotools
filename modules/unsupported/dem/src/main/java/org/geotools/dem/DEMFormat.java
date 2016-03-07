@@ -24,6 +24,7 @@ import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
 import org.geotools.data.DefaultTransaction;
+import org.geotools.dem.overview.Overviews;
 import org.geotools.factory.Hints;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.gce.geotiff.GeoTiffWriter;
@@ -40,6 +41,7 @@ import org.geotools.parameter.DefaultParameterDescriptor;
 import org.geotools.parameter.DefaultParameterDescriptorGroup;
 import org.geotools.parameter.ParameterGroup;
 import org.geotools.process.raster.mask.OutliersMaskProcess;
+import org.geotools.util.logging.Logging;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -55,6 +57,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -63,12 +67,14 @@ import java.util.List;
  */
 public class DEMFormat extends AbstractGridFormat implements Format {
     
+    private final static Logger LOGGER = Logging.getLogger(DEMFormat.class);
+    
     /** Optional Sorting for the granules of the mosaic.
      * 
      *  <p>It does work only with DBMS as indexes
      */
     public static final ParameterDescriptor<String> SORT_BY = new DefaultParameterDescriptor<String>("SORTING", String.class, null, 
-            "resolution A, date D");
+            "resolution A, date D, fsDate D");
     
     private OutliersMaskProcess outliersProcess = new OutliersMaskProcess();
 
@@ -181,8 +187,14 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                     GridCoverage2D maskedCoverage = outliersProcess.execute(coverage, 0, 10.0, 1000, 1.0, null, 
                             OutliersMaskProcess.OutputMethod.NoDataMask, null,
                             OutliersMaskProcess.StatisticMethod.InterquartileRange);
-                    GeoTiffWriter writer = new GeoTiffWriter(getMaskedFile(fileBeingProcessed));
+                    File maskedFile = getMaskedFile(fileBeingProcessed);
+                    GeoTiffWriter writer = new GeoTiffWriter(maskedFile);
                     writer.write(maskedCoverage, null);
+                    try{
+                        Overviews.add(maskedFile, 2, 4, 6 ,8, 16);
+                    } catch (IOException e) {
+                        LOGGER.log(Level.WARNING, "Failed to add overviews to " + maskedFile, e);
+                    }
                     
                     super.updateCatalog(coverageName, fileBeingProcessed, inputReader, mosaicReader, configuration, 
                             envelope, transaction, propertiesCollectors);
