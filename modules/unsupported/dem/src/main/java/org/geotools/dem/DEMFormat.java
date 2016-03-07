@@ -188,7 +188,7 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                     if (!fileBeingProcessed.getName().toLowerCase().endsWith(MASK_TIFF)) {                    
                         GridCoverage2D coverage = inputReader.read(null);
                         GridCoverage2D maskedCoverage = outliersProcess.execute(coverage, 0, 10.0, 1000, 1.0, null, 
-                                OutliersMaskProcess.OutputMethod.NoDataMask, null,
+                                OutliersMaskProcess.OutputMethod.AlphaMask, null,
                                 OutliersMaskProcess.StatisticMethod.InterquartileRange);
                         File maskedFile = getMaskedFile(fileBeingProcessed);
                         GeoTiffWriter writer = new GeoTiffWriter(maskedFile);
