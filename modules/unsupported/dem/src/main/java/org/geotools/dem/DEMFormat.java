@@ -67,7 +67,9 @@ import java.util.logging.Logger;
  */
 public class DEMFormat extends AbstractGridFormat implements Format {
     
-    private final static Logger LOGGER = Logging.getLogger(DEMFormat.class);
+    private static final String MASK_TIFF = ".mask.tiff";
+
+    private static final Logger LOGGER = Logging.getLogger(DEMFormat.class);
     
     /** Optional Sorting for the granules of the mosaic.
      * 
@@ -169,7 +171,7 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                 
                 private File getMaskedFile(File fileBeingProcessed) {
                     return new File(fileBeingProcessed.getParent(),
-                            FilenameUtils.getBaseName(fileBeingProcessed.getName()) + ".mask.tiff");
+                            FilenameUtils.getBaseName(fileBeingProcessed.getName()) + MASK_TIFF);
                 }
                 
                 @Override
@@ -183,21 +185,23 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                         final DefaultTransaction transaction, 
                         final List<PropertiesCollector> propertiesCollectors) throws IOException {
                     
-                    GridCoverage2D coverage = inputReader.read(null);
-                    GridCoverage2D maskedCoverage = outliersProcess.execute(coverage, 0, 10.0, 1000, 1.0, null, 
-                            OutliersMaskProcess.OutputMethod.NoDataMask, null,
-                            OutliersMaskProcess.StatisticMethod.InterquartileRange);
-                    File maskedFile = getMaskedFile(fileBeingProcessed);
-                    GeoTiffWriter writer = new GeoTiffWriter(maskedFile);
-                    writer.write(maskedCoverage, null);
-                    try{
-                        Overviews.add(maskedFile, 2, 4, 6 ,8, 16);
-                    } catch (IOException e) {
-                        LOGGER.log(Level.WARNING, "Failed to add overviews to " + maskedFile, e);
-                    }
-                    
-                    super.updateCatalog(coverageName, fileBeingProcessed, inputReader, mosaicReader, configuration, 
-                            envelope, transaction, propertiesCollectors);
+                    if (!fileBeingProcessed.getName().toLowerCase().endsWith(MASK_TIFF)) {                    
+                        GridCoverage2D coverage = inputReader.read(null);
+                        GridCoverage2D maskedCoverage = outliersProcess.execute(coverage, 0, 10.0, 1000, 1.0, null, 
+                                OutliersMaskProcess.OutputMethod.NoDataMask, null,
+                                OutliersMaskProcess.StatisticMethod.InterquartileRange);
+                        File maskedFile = getMaskedFile(fileBeingProcessed);
+                        GeoTiffWriter writer = new GeoTiffWriter(maskedFile);
+                        writer.write(maskedCoverage, null);
+                        try{
+                            Overviews.add(maskedFile, 2, 4, 6 ,8, 16);
+                        } catch (IOException e) {
+                            LOGGER.log(Level.WARNING, "Failed to add overviews to " + maskedFile, e);
+                        }
+                        
+                        super.updateCatalog(coverageName, fileBeingProcessed, inputReader, mosaicReader, configuration, 
+                                envelope, transaction, propertiesCollectors);
+                    } //skip masks
                 }
                 
             }); 
