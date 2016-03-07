@@ -127,6 +127,7 @@
      <profile>
        <id>dem</id>
        <modules>
+         <module>process-raster</module>
          <module>dem</module>
        </modules>
      </profile>
