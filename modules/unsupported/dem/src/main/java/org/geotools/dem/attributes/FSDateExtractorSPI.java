@@ -14,7 +14,7 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geotools.dem.resolution;
+package org.geotools.dem.attributes;
 
 import java.awt.RenderingHints.Key;
 import java.util.Collections;
@@ -29,10 +29,10 @@ import org.geotools.gce.imagemosaic.properties.PropertiesCollectorSPI;
  *
  * @author Niels Charlier
  */
-public class ResolutionExtractorSPI implements PropertiesCollectorSPI {
+public class FSDateExtractorSPI implements PropertiesCollectorSPI {
     
     public String getName() {
-        return "ResolutionExtractorSPI";
+        return "FSDateExtractorSPI";
     }
 
     public boolean isAvailable() {
@@ -44,6 +44,6 @@ public class ResolutionExtractorSPI implements PropertiesCollectorSPI {
     }
 
     public PropertiesCollector create(final Object o, final List<String> propertyNames) {
-        return new ResolutionExtractor(this, propertyNames);
+        return new FSDateExtractor(this, propertyNames);
     }
 }

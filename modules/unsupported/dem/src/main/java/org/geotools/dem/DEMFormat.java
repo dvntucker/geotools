@@ -122,9 +122,9 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                     featureBuilder.add(runConfiguration.getParameter(Prop.LOCATION_ATTRIBUTE).trim(), String.class);
                     featureBuilder.add("the_geom", Polygon.class, actualCRS);
                     featureBuilder.setDefaultGeometry("the_geom");
-                    addAttributes("date", featureBuilder, Date.class);                    
-                    addAttributes("resolution", featureBuilder, Double.class);
-                    
+                    addAttributes("date", featureBuilder, Date.class);    
+                    addAttributes("fsDate", featureBuilder, Date.class);     
+                    addAttributes("resolution", featureBuilder, Double.class);                    
                     
                     return featureBuilder.buildFeatureType();
                 }
@@ -138,6 +138,13 @@ public class DEMFormat extends AbstractGridFormat implements Format {
                     collectorDate.setMapped("date");   
                     collectorDate.setValue("");                 
                     list.add(collectorDate);       
+                    
+
+                    Collector collectorFSDate = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
+                    collectorFSDate.setSpi("FSDateExtractorSPI");
+                    collectorFSDate.setMapped("fsDate");   
+                    collectorFSDate.setValue("");                 
+                    list.add(collectorFSDate);       
                     
                     Collector collectorX = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
                     collectorX.setSpi("ResolutionExtractorSPI");

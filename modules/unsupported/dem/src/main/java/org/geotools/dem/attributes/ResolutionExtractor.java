@@ -14,10 +14,9 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geotools.dem.resolution;
+package org.geotools.dem.attributes;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -54,59 +53,50 @@ class ResolutionExtractor extends PropertiesCollector {
         } 
         return this;
     }
-
-    @Override
-    public void setProperties(SimpleFeature feature) {              
-        // get all the matches and convert them in doubles
-        final List<Double> values = new ArrayList<Double>();
-        for (String match : getMatches()) {
-            // try to convert to resolution
+    
+    Double getResolution() {        
+        // get the the match and convert it to double        
+        String resolutionStr = getMatches().size() > 0 ? getMatches().get(0) : null;
+        if (resolutionStr != null) {
             try {
-                Double parsed = Double.parseDouble(match);
-                values.add(parsed);
+                return Double.parseDouble(resolutionStr);
             } catch (NumberFormatException e) {
                 if (LOGGER.isLoggable(Level.FINE)) {
                     LOGGER.log(Level.FINE, e.getLocalizedMessage(), e);
                 }
             }
-
         }
+        return null;
+    }
 
-        // set the properties, only if we have matches!
-        if (values.size() <= 0) {
+    @Override
+    public void setProperties(SimpleFeature feature) { 
+        Double res = getResolution();
+        // set the properties, only if we have a match!
+        if (res == null) {
             if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("No matches found for this property extractor:");
             }
             throw new IllegalArgumentException("No matches found for this property extractor");
         }
-        int index = 0;
         for (String propertyName : getPropertyNames()) {
             // set the property
-            feature.setAttribute(propertyName, values.get(index++));
-
-            // do we have more resolutions?
-            if (index >= values.size())
-                return;
+            feature.setAttribute(propertyName, res);
         }
     }
 
     @Override
     public void setProperties(Map<String, Object> map) {
-        // get all the matches and convert them 
-        List<String> matches = getMatches();
-
-        // set the properties, only if we have matches!
-        if (matches.size() <= 0) {
-            if (LOGGER.isLoggable(Level.FINE))
+        Double res = getResolution();
+        // set the properties, only if we have a match!
+        if (res == null) {
+            if (LOGGER.isLoggable(Level.FINE)) {
                 LOGGER.fine("No matches found for this property extractor:");
-        }
-        int index = 0;
-        for (String propertyName : getPropertyNames()) {
-            map.put(propertyName, matches.get(index++));
-            // do we have more values?
-            if (index >= matches.size()) {
-                return;
             }
+        }
+        for (String propertyName : getPropertyNames()) {
+            // set the property            
+            map.put(propertyName, res);
         }
     }
 

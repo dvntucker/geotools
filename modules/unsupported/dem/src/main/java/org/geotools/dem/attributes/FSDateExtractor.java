@@ -14,17 +14,19 @@
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
  *    Lesser General Public License for more details.
  */
-package org.geotools.dem.resolution;
+package org.geotools.dem.attributes;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.gce.imagemosaic.properties.PropertiesCollector;
 import org.geotools.gce.imagemosaic.properties.PropertiesCollectorSPI;
 import org.geotools.util.logging.Logging;
@@ -35,44 +37,31 @@ import org.opengis.feature.simple.SimpleFeature;
  * @author Niels Charlier
  * 
  */
-class DateExtractor extends PropertiesCollector {
+class FSDateExtractor extends PropertiesCollector {
     
-    private final static SimpleDateFormat FORMAT = new SimpleDateFormat("yyyy:mm:dd hh:mm:ss");
+    private final static Logger LOGGER = Logging.getLogger(FSDateExtractor.class);
     
-    private final static Logger LOGGER = Logging.getLogger(ResolutionExtractor.class);
+    private Date date = null;
     
-    public DateExtractor(PropertiesCollectorSPI spi, List<String> propertyNames) {
+    public FSDateExtractor(PropertiesCollectorSPI spi, List<String> propertyNames) {
         super(spi, propertyNames);
     }
     
     @Override
-    public PropertiesCollector collect(final GridCoverage2DReader gridCoverageReader) {
-        String value = ((org.geotools.gce.geotiff.GeoTiffReader) gridCoverageReader).getMetadata().getAsciiTIFFTag("306");
-        if (value != null) {
-            addMatch("" + value);
-        } else {
-            addMatch("");
+    public PropertiesCollector collect(final File file) {
+        try {
+            BasicFileAttributes attributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+            date = new Date(attributes.creationTime().to(TimeUnit.MILLISECONDS));
+        } catch (IOException e) {
+            if (LOGGER.isLoggable(Level.FINE)) {
+                LOGGER.log(Level.FINE, e.getLocalizedMessage(), e);
+            }
         }
         return this;
     }
-    
-    private Date getDate() {
-        String dateStr = getMatches().get(0);
-        Date date = null;
-        if (dateStr != null && !dateStr.isEmpty()) {        
-            try {
-                date = FORMAT.parse(getMatches().get(0));
-            } catch (ParseException e) {
-                LOGGER.log(Level.WARNING, "Failed to parse date: " + dateStr, e);
-            }
-        }
-        return date;
-    }
 
     @Override
-    public void setProperties(SimpleFeature feature) {   
-        Date date = getDate();
-       
+    public void setProperties(SimpleFeature feature) {         
         if (date != null) {
             for (String propertyName : getPropertyNames()) {
                 // set the property
@@ -83,8 +72,6 @@ class DateExtractor extends PropertiesCollector {
 
     @Override
     public void setProperties(Map<String, Object> map) {
-        Date date = getDate();
-       
         if (date != null) {
             for (String propertyName : getPropertyNames()) {
                 // set the property
