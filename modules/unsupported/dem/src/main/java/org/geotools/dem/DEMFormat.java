@@ -82,9 +82,9 @@ public class DEMFormat extends AbstractGridFormat implements Format {
 
     public DEMFormat() {
         HashMap<String,String> info = new HashMap<String,String> ();
-        info.put("name", "Digital Elevation Modal");
+        info.put("name", "Digital Elevation Model");
         info.put("description", "DEM based on disparate rasters");
-        info.put("vendor", "Geotools");
+        info.put("vendor", "GeoTools");
         info.put("docURL", "");
         info.put("version", "1.0");
         this.mInfo = info;
