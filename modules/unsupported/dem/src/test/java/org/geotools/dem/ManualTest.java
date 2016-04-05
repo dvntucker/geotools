@@ -40,6 +40,7 @@ import org.geotools.image.ImageWorker;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.operation.transform.WarpBuilder;
+import org.opengis.coverage.Coverage;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.coverage.grid.GridGeometry;
 import org.opengis.geometry.Envelope;
@@ -58,7 +59,7 @@ import org.opengis.referencing.operation.TransformException;
  */
 public class ManualTest {
 
-    private String testFileOne = "dem_large-clipped-float.tiff";
+    private String testFileOne = "dem_large-clipped.tif";
     private String testFileTwo = "sfdem.tif";
     String targetCrs = "EPSG:4326";
 
@@ -93,10 +94,12 @@ public class ManualTest {
 
     private void colorExpansion() {
         //dem needs to be expanded
+        demLargeImageWorker.forceColorSpaceGRAYScale();
+        sfDemWorker.forceColorSpaceGRAYScale();
     }
 
     private void writeMosaic() throws IOException {
-        ImageIO.write(this.mosaicWorker.getRenderedOperation(), "tiff", new File("mosaicresult.png"));
+        ImageIO.write(this.mosaicWorker.getRenderedOperation(), "tiff", new File("mosaicresult.tiff"));
     }
 
     private void produceMosaic() throws IOException {
@@ -117,7 +120,7 @@ public class ManualTest {
                 null);
     }
 
-    private void reproject() throws FactoryException, TransformException {
+    private void reproject() throws FactoryException, TransformException, IOException {
         //reproject sfdem
         CoordinateReferenceSystem targetCRS = CRS.decode("EPSG:4326");
 
