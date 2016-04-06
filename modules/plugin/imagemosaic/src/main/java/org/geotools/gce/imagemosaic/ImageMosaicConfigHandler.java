@@ -959,7 +959,7 @@ public class ImageMosaicConfigHandler {
             } else {
                 expectedCRS = rasterManager.spatialDomainManager.coverageCRS;
             }
-            if (!(CRS.equalsIgnoreMetadata(expectedCRS, actualCRS))) {
+            if (!CRS.equalsIgnoreMetadata(expectedCRS, actualCRS) && !mosaicConfiguration.isHeterogenousCRS()) {
                 // if ((fileIndex > 0 ? !(CRS.equalsIgnoreMetadata(defaultCRS, actualCRS)) : false)) {
                 eventHandler.fireFileEvent(Level.INFO, fileBeingProcessed, false, "Skipping image "
                         + fileBeingProcessed + " because CRSs do not match.",

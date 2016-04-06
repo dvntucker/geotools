@@ -16,7 +16,7 @@
  */
 package org.geotools.gce.imagemosaic;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -87,6 +87,7 @@ import org.opengis.parameter.ParameterValue;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.datum.PixelInCell;
 import org.opengis.referencing.operation.MathTransform;
+
 /**
  * Reader responsible for providing access to mosaic of georeferenced
  * images. Citing JAI documentation:
@@ -532,6 +533,7 @@ public class ImageMosaicReader extends AbstractGridCoverage2DReader implements S
      * 
      * @param source
      * @param uHints
+     * @param conifg An optional config file, if found will not attempt to load the config
      * @throws DataSourceException
      */
     private void initReaderFromURL(final Object source, final Hints hints) throws Exception {
