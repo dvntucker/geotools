@@ -539,7 +539,7 @@ public class ImageMosaicReader extends AbstractGridCoverage2DReader implements S
     private void initReaderFromURL(final Object source, final Hints hints) throws Exception {
         this.sourceURL = Utils.checkSource(source, hints, catalogManager);
         
-        // Preliminar check on source
+        // Preliminary check on source
         if (this.sourceURL == null) {
             throw new DataSourceException(
                     "This plugin accepts File, URL or String. The string may describe a File or an URL");
