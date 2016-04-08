@@ -34,7 +34,9 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 public class MosaicBeanBuilder {
 
     private MosaicConfigurationBean bean;
-    
+
+    private boolean heterogenousCRS;
+
     /**
      * Default constructor
      */
@@ -257,7 +259,16 @@ public class MosaicBeanBuilder {
             bean.setAuxiliaryFilePath(auxiliaryFilePath);
             bean.setAuxiliaryDatastorePath(auxiliaryDatastorePath);
             bean.setCheckAuxiliaryMetadata(checkAuxiliaryMetadata);
+            bean.setHeterogenousCRS(heterogenousCRS);
         }
         return bean;
+    }
+
+    public boolean isHeterogenousCRS() {
+        return heterogenousCRS;
+    }
+
+    public void setHeterogenousCRS(boolean heterogenousCRS) {
+        this.heterogenousCRS = heterogenousCRS;
     }
 }

@@ -50,8 +50,12 @@ public class CatalogBuilderConfiguration {
 	private String runtimeAttribute;
 
 	private Indexer indexer;
-	
-	
+
+    /**
+     * Set to allow granules with disparate CRSs. Default is false, all granules must have
+     * compatible CRS
+     */
+    private boolean allowHeterogenousCRS = false;
 	
 	/**
 	 * @deprecated parse indexer parameters instead.
@@ -345,4 +349,11 @@ public class CatalogBuilderConfiguration {
             throw new IllegalStateException("WildcardString name cannot be empty");
     }
 
+    public boolean isAllowHeterogenousCRS() {
+        return allowHeterogenousCRS;
+    }
+
+    public void setAllowHeterogenousCRS(boolean allowHeterogenousCRS) {
+        this.allowHeterogenousCRS = allowHeterogenousCRS;
+    }
 }

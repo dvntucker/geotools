@@ -121,8 +121,7 @@ public class ImageMosaicConfigHandler {
     
     /**
      * 
-     * 
-     * @throws
+     *
      * @throws IllegalArgumentException
      */
     public ImageMosaicConfigHandler(final CatalogBuilderConfiguration configuration,
@@ -132,8 +131,7 @@ public class ImageMosaicConfigHandler {
 
     /**
      * Default constructor
-     * 
-     * @throws
+     *
      * @throws IllegalArgumentException
      */
     public ImageMosaicConfigHandler(final CatalogBuilderConfiguration configuration,
@@ -336,7 +334,9 @@ public class ImageMosaicConfigHandler {
 
     protected GranuleCatalog buildCatalog() throws IOException {
         GranuleCatalog catalog = catalogManager.createCatalog(runConfiguration, !useExistingSchema);
-        getParentReader().granuleCatalog = catalog;
+        if (getParentReader() != null) {
+            getParentReader().granuleCatalog = catalog;
+        }
         return catalog;
     }
 
@@ -765,17 +765,16 @@ public class ImageMosaicConfigHandler {
      * Use the passed coverageReader to create or update the all the needed configurations<br/>
      * It not responsible of the passed coverageReader which should be disposed outside (in the caller).
      * 
-     * @param coverageReader
-     * @param inputCoverageName
-     * @param fileBeingProcessed
-     * @param fileIndex
-     * @param numFiles
-     * @param transaction
+     * @param coverageReader coverage reader for the current coverage
+     * @param inputCoverageName name of the current coverage
+     * @param fileBeingProcessed current granule file
+     * @param fileIndex index of the granule
+     * @param numFiles number of files in the granule
+     * @param transaction current transaction
      * @throws IOException
      */
-    public void updateConfiguration(GridCoverage2DReader coverageReader,
-            final String inputCoverageName, File fileBeingProcessed, int fileIndex,
-            double numFiles, DefaultTransaction transaction) throws IOException {
+    void updateConfiguration(GridCoverage2DReader coverageReader, final String inputCoverageName,
+            File fileBeingProcessed, int fileIndex, double numFiles, DefaultTransaction transaction) throws IOException {
 
         final String indexName = getRunConfiguration().getParameter(Prop.INDEX_NAME);
         final String coverageName = coverageReader instanceof StructuredGridCoverage2DReader ? inputCoverageName
@@ -786,7 +785,7 @@ public class ImageMosaicConfigHandler {
         // checking whether the coverage already exists
         final boolean coverageExists = coverageExists(coverageName);
         MosaicConfigurationBean mosaicConfiguration = null;
-        MosaicConfigurationBean currentConfigurationBean = null;
+        MosaicConfigurationBean currentConfigurationBean;
         RasterManager rasterManager = null;
         if (coverageExists) {
 
@@ -805,10 +804,10 @@ public class ImageMosaicConfigHandler {
         final CoordinateReferenceSystem actualCRS = coverageReader
                 .getCoordinateReferenceSystem(inputCoverageName);
 
-        SampleModel sm = null;
-        ColorModel cm = null;
-        int numberOfLevels = 1;
-        double[][] resolutionLevels = null;
+        SampleModel sm;
+        ColorModel cm;
+        int numberOfLevels;
+        double[][] resolutionLevels;
         CatalogBuilderConfiguration catalogConfig;
         if (mosaicConfiguration == null) {
             catalogConfig = getRunConfiguration();
@@ -842,6 +841,7 @@ public class ImageMosaicConfigHandler {
             // STEP 2.A
             // Preparing configuration
             configBuilder.setCrs(actualCRS);
+            configBuilder.setHeterogenousCRS(catalogConfig.isAllowHeterogenousCRS());
             configBuilder.setLevels(resolutionLevels);
             configBuilder.setLevelsNum(numberOfLevels);
             configBuilder.setName(coverageName);
@@ -899,8 +899,6 @@ public class ImageMosaicConfigHandler {
                 SimpleFeatureType indexSchema = catalogManager.createSchema(getRunConfiguration(),
                         currentConfigurationBean.getName(), actualCRS);
                 getParentReader().createCoverage(coverageName, indexSchema);
-//            } else {
-//                rasterManager.typeName = coverageName;
             }
             getConfigurations().put(currentConfigurationBean.getName(), currentConfigurationBean);
 
@@ -915,8 +913,6 @@ public class ImageMosaicConfigHandler {
             // We already have a Configuration for this coverage.
             // Check its properties are compatible with the existing coverage.
 
-            CatalogConfigurationBean catalogConfigurationBean = bean;
-
             // make sure we pick the same resolution irrespective of order of harvest
             numberOfLevels = coverageReader.getNumOverviews(inputCoverageName) + 1;
             resolutionLevels = coverageReader.getResolutionLevels(inputCoverageName);
@@ -926,13 +922,13 @@ public class ImageMosaicConfigHandler {
             if (Utils.homogeneousCheck(Math.min(numberOfLevels, originalNumberOfLevels), 
                     resolutionLevels, mosaicConfiguration.getLevels())) {
                 if (numberOfLevels != originalNumberOfLevels) {
-                    catalogConfigurationBean.setHeterogeneous(true);
+                    bean.setHeterogeneous(true);
                     if (numberOfLevels > originalNumberOfLevels) {
                         needUpdate = true; // pick the one with highest number of levels
                     }
                 }
             } else {
-                catalogConfigurationBean.setHeterogeneous(true);
+                bean.setHeterogeneous(true);
                 if (isHigherResolution(resolutionLevels, mosaicConfiguration.getLevels())) {
                     needUpdate = true; // pick the one with the highest resolution
                 }

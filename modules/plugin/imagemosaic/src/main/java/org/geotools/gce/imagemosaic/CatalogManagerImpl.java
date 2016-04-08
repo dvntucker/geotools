@@ -18,6 +18,7 @@ package org.geotools.gce.imagemosaic;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collection;
 import java.util.Collections;
@@ -132,26 +133,45 @@ public class CatalogManagerImpl implements CatalogManager {
             if(indexerTypeName != null && properties.getProperty(Utils.Prop.TYPENAME) == null) {
                 properties.put(Utils.Prop.TYPENAME, indexerTypeName);
             }
-            catalog = createGranuleCatalogFromDatastore(parent, properties, create,
-                    Boolean.parseBoolean(runConfiguration.getParameter(Utils.Prop.WRAP_STORE)),
-                    runConfiguration.getHints());
-        } else {
 
-            // we do not have a datastore properties file therefore we continue with a shapefile datastore
-            final URL file = new File(parent, runConfiguration.getParameter(Utils.Prop.INDEX_NAME) + ".shp").toURI().toURL();
-            final Properties params = new Properties();
-            params.put(ShapefileDataStoreFactory.URLP.key, file);
-            if (file.getProtocol().equalsIgnoreCase("file")) {
-                params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.TRUE);
+            //let's check to see whether we should create the default index even though there is a
+            //datastore config already there.
+            if (Boolean.valueOf(
+                    properties.getProperty(Utils.Prop.FORCE_DEFAULT_SHAPE_INDEX, "false"))) {
+                catalog = createDefaultShapefileGranuleCatalog(runConfiguration, create, parent);
             }
-            params.put(ShapefileDataStoreFactory.MEMORY_MAPPED.key, USE_MEMORY_MAPPED_BUFFERS);
-            params.put(ShapefileDataStoreFactory.DBFTIMEZONE.key, TimeZone.getTimeZone("UTC"));
-            params.put(Utils.Prop.LOCATION_ATTRIBUTE, runConfiguration.getParameter(Utils.Prop.LOCATION_ATTRIBUTE));
-            catalog = GranuleCatalogFactory.createGranuleCatalog(params, false, create, Utils.SHAPE_SPI,runConfiguration.getHints());
-            MultiLevelROIProvider roi = MultiLevelROIProviderFactory.createFootprintProvider(parent);
-            catalog.setMultiScaleROIProvider(roi);
+            else {
+                catalog = createGranuleCatalogFromDatastore(parent, properties, create,
+                        Boolean.parseBoolean(runConfiguration.getParameter(Utils.Prop.WRAP_STORE)),
+                        runConfiguration.getHints());
+            }
+
+        } else {
+            //no datastore config found, we create the default catalog
+            catalog = createDefaultShapefileGranuleCatalog(runConfiguration, create, parent);
+
         }
 
+        return catalog;
+    }
+
+    private GranuleCatalog createDefaultShapefileGranuleCatalog(
+            CatalogBuilderConfiguration runConfiguration, boolean create, File parent)
+            throws MalformedURLException {
+        GranuleCatalog catalog;// we do not have a datastore properties file therefore we continue with a shapefile datastore
+        final URL file = new File(parent, runConfiguration.getParameter(Prop.INDEX_NAME) + ".shp").toURI().toURL();
+        final Properties params = new Properties();
+        params.put(ShapefileDataStoreFactory.URLP.key, file);
+        if (file.getProtocol().equalsIgnoreCase("file")) {
+            params.put(ShapefileDataStoreFactory.CREATE_SPATIAL_INDEX.key, Boolean.TRUE);
+        }
+        params.put(ShapefileDataStoreFactory.MEMORY_MAPPED.key, USE_MEMORY_MAPPED_BUFFERS);
+        params.put(ShapefileDataStoreFactory.DBFTIMEZONE.key, TimeZone.getTimeZone("UTC"));
+        params.put(Prop.LOCATION_ATTRIBUTE, runConfiguration.getParameter(Prop.LOCATION_ATTRIBUTE));
+        catalog = GranuleCatalogFactory
+                .createGranuleCatalog(params, false, create, Utils.SHAPE_SPI,runConfiguration.getHints());
+        MultiLevelROIProvider roi = MultiLevelROIProviderFactory.createFootprintProvider(parent);
+        catalog.setMultiScaleROIProvider(roi);
         return catalog;
     }
 

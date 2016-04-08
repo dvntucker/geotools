@@ -141,6 +141,8 @@ public class Utils {
 
     public final static Key MOSAIC_READER = new Key(ImageMosaicReader.class);
 
+    public final static Key ALLOW_HETEROGENOUS_CRS = new Key(Boolean.class);
+
     public static final String RANGE_SPLITTER_CHAR = ";";
 
     public final static String INDEXER_PROPERTIES = "indexer.properties";
@@ -267,6 +269,11 @@ public class Utils {
 
         //Whether granules should be a consistent CRS or we should allow heterogenous CRSs
         public static final String HETEROGENOUS_CRS = "AllowHeterogenousCRS";
+
+        //whether we should force using the default shapefile index path despite the presence of
+        //a datastore.properties file. this allows using the properties file to set some overall
+        //mosaic config but still have the code create the default shapefile index
+        public static final String FORCE_DEFAULT_SHAPE_INDEX = "ForceDefaultShapeIndex";
     }
 
     /**
@@ -328,7 +335,7 @@ public class Utils {
      * something bad happens, in which case the reason should be logged
      * to the logger.
      */
-    static boolean createMosaic(final String location, final String indexName,
+    public static boolean createMosaic(final String location, final String indexName,
             final String wildcard, final boolean absolutePath, final Hints hints,
             CatalogManager catalogManager) {
 
@@ -336,6 +343,9 @@ public class Utils {
         final CatalogBuilderConfiguration configuration = new CatalogBuilderConfiguration();
         configuration.setHints(
                 hints);// retain hints as this may contain an instance of an ImageMosaicReader
+        boolean allowHeterogeneousCRS = (boolean) hints.getOrDefault(ALLOW_HETEROGENOUS_CRS,
+                false);
+        configuration.setAllowHeterogenousCRS(allowHeterogeneousCRS);
         List<Parameter> parameterList = configuration.getIndexer().getParameters().getParameter();
 
         IndexerUtils.setParam(parameterList, Prop.ABSOLUTE_PATH, Boolean.toString(absolutePath));
@@ -392,10 +402,7 @@ public class Utils {
         }
 
         // check that nothing bad happened
-        if (exceptions.size() > 0) {
-            return false;
-        }
-        return true;
+        return exceptions.size() <= 0;
     }
 
     // Make additional filters pluggable
@@ -1189,8 +1196,9 @@ public class Utils {
                 // this can be used to look for properties files that do NOT
                 // define a datastore
                 final File[] properties = sourceFile.listFiles((FilenameFilter) FileFilterUtils
-                        .and(FileFilterUtils.notFileFilter(
-                                FileFilterUtils.nameFileFilter("datastore.properties")),
+                        .and(
+                                FileFilterUtils.notFileFilter(
+                                        FileFilterUtils.nameFileFilter("datastore.properties")),
                                 FileFilterUtils.makeFileOnly(
                                         FileFilterUtils.suffixFileFilter(".properties"))));
 
@@ -1220,6 +1228,7 @@ public class Utils {
                 } else {
                     // we did not find any good candidate for mosaic.properties
                     // file, this will signal it
+                    //we may still have a properties file with configuration options in it
                     buildMosaic = true;
                     datastoreFound = false;
                 }
@@ -1247,10 +1256,12 @@ public class Utils {
                             break;
                         }
                     }
-
                 }
 
                 // did we find anything? If no, we try to build a new mosaic
+                // DT - I'm not sure this should be here? Should a method named Utils.checkSource
+                // actually build a mosaic if one isn't found? That's an unexpected behavior
+                // API-wise
                 if (buildMosaic) {
                     ////
                     //
