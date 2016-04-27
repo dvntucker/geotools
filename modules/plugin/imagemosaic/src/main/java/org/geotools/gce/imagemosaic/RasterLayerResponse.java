@@ -1092,6 +1092,7 @@ import com.vividsolutions.jts.util.Assert;
                 }
                 final MosaicElement preparedMosaic = new Mosaicker(collector.collectGranules(),
                         MergeBehavior.FLAT).createMosaic();
+                //now if this mosaic element needs reprojection, let's reprojection
                 if (preparedMosaic != null) {
                     mosaicInputs.add(preparedMosaic);
                     if (first == null) {

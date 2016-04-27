@@ -93,7 +93,7 @@ public class ManualTest {
     }
 
     private void colorExpansion() {
-        //dem needs to be expanded
+        //need to get the same colorspace on each image or else mosaic will fail.
         demLargeImageWorker.forceColorSpaceGRAYScale();
         sfDemWorker.forceColorSpaceGRAYScale();
     }
