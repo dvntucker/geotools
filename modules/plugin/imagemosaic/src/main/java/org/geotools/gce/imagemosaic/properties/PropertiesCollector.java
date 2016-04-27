@@ -29,7 +29,7 @@ import org.opengis.feature.simple.SimpleFeature;
 
 
 /**
- * 
+ * Collect properties from GridCoverage during index generation
  *
  * @source $URL$
  */
