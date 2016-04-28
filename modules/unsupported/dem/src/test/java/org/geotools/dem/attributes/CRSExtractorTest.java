@@ -23,17 +23,25 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Optional;
 
 import org.apache.commons.io.FileUtils;
+import org.geotools.data.Query;
+import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.dem.DEMCatalogManager;
 import org.geotools.factory.Hints;
 import org.geotools.gce.imagemosaic.CatalogManagerImpl;
 import org.geotools.gce.imagemosaic.ImageMosaicReader;
 import org.geotools.gce.imagemosaic.Utils;
+import org.geotools.gce.imagemosaic.catalog.GranuleCatalog;
 import org.geotools.test.TestData;
+import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.AttributeDescriptor;
 
 /**
  * Testing whether the CRS extractor actually sets the CRS on a DEM
@@ -45,7 +53,7 @@ public class CRSExtractorTest {
     @Test
     public void testDifferentProjections() throws Exception {
 
-        URL testDataURL = TestData.url(this, "diffprojections");
+        URL testDataURL = this.getClass().getResource("/diffprojections");
         File testDataFolder = new File(testDataURL.toURI());
         File testDirectory = testFolder.newFolder("diffprojectionstest");
         FileUtils.copyDirectory(testDataFolder, testDirectory);
@@ -54,6 +62,28 @@ public class CRSExtractorTest {
         creationHints.put(Utils.ALLOW_HETEROGENOUS_CRS, true);
         ImageMosaicReader imReader = new ImageMosaicReader(testDirectory, creationHints, catalogManager);
         assertNotNull(imReader);
+
+        GranuleCatalog gc = imReader.getRasterManager("diffprojectionstest").getGranuleCatalog();
+        assertNotNull(gc);
+
+        SimpleFeatureType type = gc.getType(gc.getTypeNames()[0]);
+        type.getAttributeDescriptors().forEach(
+                attributeDescriptor -> System.out.println(attributeDescriptor.getLocalName()));
+
+        Optional<AttributeDescriptor> crsFound = type.getAttributeDescriptors().stream()
+                .filter(attributeDescriptor -> attributeDescriptor.getLocalName().equals("crs"))
+                .findAny();
+
+        assertTrue(crsFound.isPresent());
+
+        Query q = new Query(gc.getTypeNames()[0]);
+        SimpleFeatureIterator features = gc.getGranules(q).features();
+        while (features.hasNext()) {
+            SimpleFeature feature = features.next();
+            String crs = (String) feature.getAttribute("crs");
+            assertNotNull(crs);
+            System.out.println(crs);
+        }
 
 
         FileUtils.forceDelete(testDirectory);

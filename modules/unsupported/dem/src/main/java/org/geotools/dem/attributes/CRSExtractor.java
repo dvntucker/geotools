@@ -53,7 +53,7 @@ public class CRSExtractor extends PropertiesCollector {
 
         CoordinateReferenceSystem crs = gridCoverageReader
                 .getCoordinateReferenceSystem();
-        crsCode = CRS.toSRS(crs, true);
+        crsCode = CRS.toSRS(crs, false);
 
         return this;
     }

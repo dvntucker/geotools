@@ -95,6 +95,12 @@ public class DEMCatalogManager extends CatalogManagerImpl {
         collectorX.setValue("");
         list.add(collectorX);
 
+        Indexer.Collectors.Collector collectorCrs = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
+        collectorCrs.setSpi("CRSExtractorSPI");
+        collectorCrs.setMapped("crs");
+        collectorCrs.setValue("");
+        list.add(collectorCrs);
+
         return list;
     }
 
