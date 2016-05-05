@@ -77,25 +77,29 @@ public class DEMCatalogManager extends CatalogManagerImpl {
     public List<Indexer.Collectors.Collector> customCollectors() {
         List<Indexer.Collectors.Collector> list = new ArrayList<Indexer.Collectors.Collector>();
 
-        Indexer.Collectors.Collector collectorDate = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
+        Indexer.Collectors.Collector collectorDate =
+                Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
         collectorDate.setSpi("DateExtractorSPI");
         collectorDate.setMapped("date");
         collectorDate.setValue("");
         list.add(collectorDate);
 
-        Indexer.Collectors.Collector collectorFSDate = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
+        Indexer.Collectors.Collector collectorFSDate =
+                Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
         collectorFSDate.setSpi("FSDateExtractorSPI");
         collectorFSDate.setMapped("fsDate");
         collectorFSDate.setValue("");
         list.add(collectorFSDate);
 
-        Indexer.Collectors.Collector collectorX = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
+        Indexer.Collectors.Collector collectorX =
+                Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
         collectorX.setSpi("ResolutionExtractorSPI");
         collectorX.setMapped("resolution");
         collectorX.setValue("");
         list.add(collectorX);
 
-        Indexer.Collectors.Collector collectorCrs = Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
+        Indexer.Collectors.Collector collectorCrs =
+                Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
         collectorCrs.setSpi("CRSExtractorSPI");
         collectorCrs.setMapped("crs");
         collectorCrs.setValue("");

@@ -21,6 +21,7 @@ import java.awt.image.IndexColorModel;
 import java.awt.image.SampleModel;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.List;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.geotools.gce.imagemosaic.catalog.CatalogConfigurationBean;
@@ -38,6 +39,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 public class MosaicConfigurationBean {
 
     private boolean heterogenousCRS;
+
+    private List<CoordinateReferenceSystem> foundCRSs;
 
     /**
      * Default constructor
@@ -280,5 +283,13 @@ public class MosaicConfigurationBean {
 
     public boolean isHeterogenousCRS() {
         return heterogenousCRS;
+    }
+
+    public List<CoordinateReferenceSystem> getFoundCRSs() {
+        return foundCRSs;
+    }
+
+    public void setFoundCRSs(List<CoordinateReferenceSystem> foundCRSs) {
+        this.foundCRSs = foundCRSs;
     }
 }

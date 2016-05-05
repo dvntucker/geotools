@@ -76,6 +76,8 @@ import org.geotools.util.Utilities;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import com.google.common.base.Joiner;
+
 /**
  * This class is in responsible for creating and managing the catalog and the configuration of the mosaic
  * 
@@ -728,12 +730,18 @@ public class ImageMosaicConfigHandler {
         OutputStream outStream = null;
         String filePath = runConfiguration.getParameter(Prop.ROOT_MOSAIC_DIR) + "/"
                 // + runConfiguration.getIndexName() + ".properties"));
-                + mosaicConfiguration.getName() + ".properties"; 
+                + mosaicConfiguration.getName() + ".properties";
+
+        String crsString = String.join(",",
+                mosaicConfiguration.getFoundCRSs().stream()
+                        .map(CRS::toSRS)
+                        .collect(java.util.stream.Collectors.toList()));
+        properties.setProperty(Utils.Prop.FOUND_CRSS, crsString);
+
+
         try {
             outStream = new BufferedOutputStream(new FileOutputStream(filePath));
             properties.store(outStream, "-Automagically created from GeoTools-");
-        } catch (FileNotFoundException e) {
-            eventHandler.fireEvent(Level.SEVERE, e.getLocalizedMessage(), 0);
         } catch (IOException e) {
             eventHandler.fireEvent(Level.SEVERE, e.getLocalizedMessage(), 0);
         } finally {
@@ -804,6 +812,8 @@ public class ImageMosaicConfigHandler {
         final CoordinateReferenceSystem actualCRS = coverageReader
                 .getCoordinateReferenceSystem(inputCoverageName);
 
+        List<CoordinateReferenceSystem> foundCRSs = new ArrayList<>();
+
         SampleModel sm;
         ColorModel cm;
         int numberOfLevels;
@@ -852,6 +862,9 @@ public class ImageMosaicConfigHandler {
             configBuilder.setAdditionalDomainAttributes(IndexerUtils.getAttribute(coverageName,
                     Utils.ADDITIONAL_DOMAIN, indexer));
 
+            foundCRSs.add(actualCRS);
+            configBuilder.setFoundCRSs(foundCRSs);
+
             final Hints runHints = getRunConfiguration().getHints();
             if (runHints != null) {
                 if (runHints.containsKey(Utils.AUXILIARY_FILES_PATH)) {
@@ -891,7 +904,7 @@ public class ImageMosaicConfigHandler {
             currentConfigurationBean = configBuilder.getMosaicConfigurationBean();
 
             // Creating a rasterManager which will be initialized after populating the catalog
-            rasterManager = getParentReader().addRasterManager(currentConfigurationBean, false);
+            getParentReader().addRasterManager(currentConfigurationBean, false);
 
             // Creating a granuleStore
             if (!useExistingSchema) {
@@ -961,6 +974,11 @@ public class ImageMosaicConfigHandler {
                         + fileBeingProcessed + " because CRSs do not match.",
                         (((fileIndex + 1) * 99.0) / numFiles));
                 return;
+            }
+            else if (!CRS.equalsIgnoreMetadata(expectedCRS, actualCRS)) {
+                if (!mosaicConfiguration.getFoundCRSs().contains(actualCRS)) {
+                    mosaicConfiguration.getFoundCRSs().add(actualCRS);
+                }
             }
 
             byte[][] palette = mosaicConfiguration.getPalette();

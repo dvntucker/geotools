@@ -43,6 +43,8 @@ import java.io.Serializable;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -54,6 +56,7 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -93,6 +96,7 @@ import org.geotools.gce.imagemosaic.catalog.index.ParametersType.Parameter;
 import org.geotools.gce.imagemosaic.catalogbuilder.CatalogBuilderConfiguration;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.image.io.ImageIOExt;
+import org.geotools.referencing.CRS;
 import org.geotools.referencing.operation.matrix.XAffineTransform;
 import org.geotools.resources.i18n.ErrorKeys;
 import org.geotools.resources.i18n.Errors;
@@ -101,6 +105,8 @@ import org.geotools.util.Range;
 import org.geotools.util.Utilities;
 import org.opengis.filter.FilterFactory2;
 import org.opengis.filter.spatial.BBOX;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
@@ -274,6 +280,8 @@ public class Utils {
         //a datastore.properties file. this allows using the properties file to set some overall
         //mosaic config but still have the code create the default shapefile index
         public static final String FORCE_DEFAULT_SHAPE_INDEX = "ForceDefaultShapeIndex";
+
+        public static final String FOUND_CRSS = "FoundCRSs";
     }
 
     /**
@@ -698,6 +706,27 @@ public class Utils {
             boolean allowHeterogenousCrs = Boolean.valueOf(
                     properties.getProperty(Prop.HETEROGENOUS_CRS, "false").trim());
             retValue.setHeterogenousCRS(allowHeterogenousCrs);
+        }
+
+        if (!ignoreSome || !ignorePropertiesSet.contains(Prop.FOUND_CRSS)) {
+            List<String> crsCodes = Arrays.asList(
+                    properties.getProperty(Prop.FOUND_CRSS).split(","));
+            List<CoordinateReferenceSystem> foundCrss = new ArrayList<>();
+            crsCodes.forEach(crsCode -> {
+                CoordinateReferenceSystem crs = null;
+                try {
+                    crs = CRS.decode(crsCode);
+                }
+                catch (FactoryException e) {
+                    LOGGER.fine("unable to decode CRS code: " + crsCode);
+                }
+
+                if (crs != null) {
+                    foundCrss.add(crs);
+                }
+            });
+
+            retValue.setFoundCRSs(foundCrss);
         }
 
         // return value

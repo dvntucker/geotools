@@ -16,6 +16,7 @@
  */
 package org.geotools.gce.imagemosaic;
 
+import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -63,6 +64,7 @@ import org.geotools.gce.imagemosaic.catalog.index.SchemasType;
 import org.geotools.gce.imagemosaic.catalogbuilder.CatalogBuilderConfiguration;
 import org.geotools.gce.imagemosaic.properties.PropertiesCollector;
 import org.geotools.geometry.GeneralEnvelope;
+import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.jdbc.JDBCDataStore;
 import org.geotools.referencing.CRS;
@@ -75,12 +77,18 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.GeometryDescriptor;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.Filter;
+import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 
+import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.geom.PrecisionModel;
+import com.vividsolutions.jts.geom.util.AffineTransformationBuilder;
+import com.vividsolutions.jts.geom.util.AffineTransformationFactory;
 
 /**
  * An utility class which allows to create schema, catalogs, and populate them.
@@ -397,6 +405,8 @@ public class CatalogManagerImpl implements CatalogManager {
         final ListFeatureCollection collection = new ListFeatureCollection(indexSchema);
         final String fileLocation = prepareLocation(configuration, fileBeingProcessed);
         final String locationAttribute = configuration.getParameter(Prop.LOCATION_ATTRIBUTE);
+        MosaicConfigurationBean mosaicConfig = mosaicReader.getRasterManager(coverageName)
+                .getConfiguration();
 
         // getting input granules
         if (inputReader instanceof StructuredGridCoverage2DReader) {
@@ -459,9 +469,36 @@ public class CatalogManagerImpl implements CatalogManager {
         } else {
             //
             // Case B: old style reader, proceed with classic way, using properties collectors 
-            // 
+            //
+
+            //default CRS of the reader
+            CoordinateReferenceSystem mosaicCRS = mosaicConfig.getCrs();
+
+            //CRS of the grid coverage reader
+            CoordinateReferenceSystem gridReaderCRS = inputReader
+                    .getCoordinateReferenceSystem();
+
+            ReferencedEnvelope targetIndexEnvelope = new ReferencedEnvelope(envelope);
+
+            if (!CRS.equalsIgnoreMetadata(mosaicCRS, gridReaderCRS)) {
+                if (!mosaicConfig.isHeterogenousCRS()) {
+                    throw new IllegalStateException(
+                            "Trying to update mosaic with a source whose CRS doesn't match the "
+                                    + "target mosaic CRS. Source CRS: " + gridReaderCRS.getName()
+                                    + ", mosaic CRS: " + mosaicCRS.getName());
+                } else {
+                    //now need to reproject the geometry in order to add it to the mosaic.
+                    try {
+                        targetIndexEnvelope = new ReferencedEnvelope(CRS.transform(envelope, mosaicCRS));
+                    } catch (TransformException e) {
+                        LOGGER.log(Level.INFO, "Unable to transform source GridReader envelope to "
+                                + "target mosaic CRS", e);
+                    }
+                }
+            }
+
             feature.setAttribute(indexSchema.getGeometryDescriptor().getLocalName(),
-                    GEOM_FACTORY.toGeometry(new ReferencedEnvelope(envelope)));
+                    GEOM_FACTORY.toGeometry(targetIndexEnvelope));
             feature.setAttribute(locationAttribute, fileLocation);
             
             updateAttributesFromCollectors(feature, fileBeingProcessed, inputReader, propertiesCollectors);

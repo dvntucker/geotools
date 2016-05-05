@@ -20,6 +20,7 @@ import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
 import java.awt.image.SampleModel;
 import java.util.Arrays;
+import java.util.List;
 
 import org.geotools.gce.imagemosaic.MosaicConfigurationBean;
 import org.geotools.gce.imagemosaic.catalog.CatalogConfigurationBean;
@@ -36,6 +37,8 @@ public class MosaicBeanBuilder {
     private MosaicConfigurationBean bean;
 
     private boolean heterogenousCRS;
+
+    private List<CoordinateReferenceSystem> foundCRSs;
 
     /**
      * Default constructor
@@ -260,6 +263,7 @@ public class MosaicBeanBuilder {
             bean.setAuxiliaryDatastorePath(auxiliaryDatastorePath);
             bean.setCheckAuxiliaryMetadata(checkAuxiliaryMetadata);
             bean.setHeterogenousCRS(heterogenousCRS);
+            bean.setFoundCRSs(foundCRSs);
         }
         return bean;
     }
@@ -270,5 +274,13 @@ public class MosaicBeanBuilder {
 
     public void setHeterogenousCRS(boolean heterogenousCRS) {
         this.heterogenousCRS = heterogenousCRS;
+    }
+
+    public void setFoundCRSs(List<CoordinateReferenceSystem> foundCRSs) {
+        this.foundCRSs = foundCRSs;
+    }
+
+    public List<CoordinateReferenceSystem> getFoundCRSs() {
+        return foundCRSs;
     }
 }
