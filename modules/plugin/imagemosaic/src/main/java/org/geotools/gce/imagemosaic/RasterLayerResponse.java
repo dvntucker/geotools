@@ -360,7 +360,7 @@ import com.vividsolutions.jts.util.Assert;
         /**
          * The final lists for granules to be computed, splitted per dimension value.
          */
-        private final List<Future<GranuleLoadingResult>> granulesFutures = new ArrayList<Future<GranuleLoadingResult>>();
+        private final List<Future<GranuleLoadingResult>> granulesFutures = new ArrayList<>();
 
         private double[][] sourceThreshold;
 
@@ -390,7 +390,7 @@ import com.vividsolutions.jts.util.Assert;
 
                 Object imageIndex = granuleDescriptor.originator.getAttribute("imageindex");
                 if (imageIndex != null && imageIndex instanceof Integer) {
-                    imageChoice = ((Integer) imageIndex).intValue();
+                    imageChoice = (Integer) imageIndex;
                 }
 
                 final GranuleLoader loader = new GranuleLoader(baseReadParameters, imageChoice,
@@ -403,8 +403,7 @@ import com.vividsolutions.jts.util.Assert;
                                 .add(rasterManager.parentReader.multiThreadedLoader.submit(loader));
                     } else {
                         // SINGLE THREADED Execution, we defer the execution to when we have done the loading
-                        final FutureTask<GranuleLoadingResult> task = new FutureTask<GranuleLoadingResult>(
-                                loader);
+                        final FutureTask<GranuleLoadingResult> task = new FutureTask<>(loader);
                         granulesFutures.add(task);
                         task.run(); // run in current thread
                     }
@@ -441,7 +440,7 @@ import com.vividsolutions.jts.util.Assert;
 
             // execute them all
             final StringBuilder paths = new StringBuilder();
-            final List<MosaicElement> returnValues = new ArrayList<RasterLayerResponse.MosaicElement>();
+            final List<MosaicElement> returnValues = new ArrayList<>();
             // collect sources for the current dimension and then process them
             for (Future<GranuleLoadingResult> future : granulesFutures) {
 
