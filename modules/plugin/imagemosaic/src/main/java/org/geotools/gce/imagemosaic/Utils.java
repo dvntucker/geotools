@@ -56,7 +56,6 @@ import java.util.Set;
 import java.util.TimeZone;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -282,6 +281,8 @@ public class Utils {
         public static final String FORCE_DEFAULT_SHAPE_INDEX = "ForceDefaultShapeIndex";
 
         public static final String FOUND_CRSS = "FoundCRSs";
+
+        public static final String CRS_CODE = "MosaicCRS";
     }
 
     /**
@@ -727,6 +728,16 @@ public class Utils {
             });
 
             retValue.setFoundCRSs(foundCrss);
+        }
+
+        if (!ignoreSome || !ignorePropertiesSet.contains(Prop.CRS_CODE)) {
+            String crsCode = properties.getProperty(Prop.CRS_CODE);
+            try {
+                retValue.setCrs(CRS.decode(crsCode));
+            } catch (FactoryException e) {
+                LOGGER.info("Unable to decode CRS from mosaic configuration (" + crsCode + "). "
+                        + "This could cause problems with the mosaic eventually.");
+            }
         }
 
         // return value

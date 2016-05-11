@@ -29,8 +29,6 @@ import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
 
-import javax.imageio.ImageIO;
-
 import org.apache.commons.io.FileUtils;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
@@ -107,7 +105,7 @@ public class RasterLayerResponseTest {
     }
 
     @Test
-    public void testHeterogenousCRS() throws IOException, URISyntaxException, TransformException,
+    public void testHeterogeneousCRS() throws IOException, URISyntaxException, TransformException,
             NoninvertibleTransformException, FactoryException {
         System.setProperty("org.geotools.referencing.forceXY", "true");
         URL storeUrl = org.geotools.TestData.url(this, "heterogeneous_crs");

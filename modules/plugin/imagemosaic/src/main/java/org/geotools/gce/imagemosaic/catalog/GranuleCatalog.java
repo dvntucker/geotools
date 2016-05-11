@@ -31,6 +31,7 @@ import org.geotools.feature.visitor.FeatureCalc;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.geometry.BoundingBox;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 /**
  * 
@@ -42,6 +43,10 @@ public abstract class GranuleCatalog {
     protected final Hints hints;
 
     protected MultiLevelROIProvider multiScaleROIProvider;
+
+    private CoordinateReferenceSystem mosaicCRS;
+
+    private boolean reprojecting;
 
     /**
      * @param hints
@@ -136,4 +141,22 @@ public abstract class GranuleCatalog {
         }
         return null;
     }
+
+    public void setMosaicCRS(CoordinateReferenceSystem mosaicCRS) {
+        this.mosaicCRS = mosaicCRS;
+    }
+
+    public CoordinateReferenceSystem getMosaicCRS() {
+        return mosaicCRS;
+    }
+
+    public void setReprojecting(boolean reprojecting) {
+        this.reprojecting = reprojecting;
+    }
+
+    public boolean isReprojecting() {
+        return reprojecting;
+    }
+
+
 }

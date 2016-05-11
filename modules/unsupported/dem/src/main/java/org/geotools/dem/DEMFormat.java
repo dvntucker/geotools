@@ -17,6 +17,9 @@
  */
 package org.geotools.dem;
 
+import java.io.IOException;
+import java.util.HashMap;
+
 import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
 import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
@@ -26,16 +29,10 @@ import org.geotools.gce.imagemosaic.ImageMosaicReader;
 import org.geotools.parameter.DefaultParameterDescriptor;
 import org.geotools.parameter.DefaultParameterDescriptorGroup;
 import org.geotools.parameter.ParameterGroup;
-import org.geotools.process.raster.mask.OutliersMaskProcess;
-import org.geotools.util.logging.Logging;
 import org.opengis.coverage.grid.Format;
 import org.opengis.coverage.grid.GridCoverageWriter;
 import org.opengis.parameter.GeneralParameterDescriptor;
 import org.opengis.parameter.ParameterDescriptor;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.logging.Logger;
 
 /**
  *
@@ -49,7 +46,7 @@ public class DEMFormat extends AbstractGridFormat implements Format {
      *  <p>It does work only with DBMS as indexes
      */
     public static final ParameterDescriptor<String> SORT_BY = new DefaultParameterDescriptor<String>("SORTING", String.class, null, 
-            "resolution A, date D, fsDate D");
+            "location");
 
     public DEMFormat() {
         HashMap<String,String> info = new HashMap<String,String> ();

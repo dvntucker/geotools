@@ -18,27 +18,17 @@
 package org.geotools.dem;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FilenameUtils;
-import org.geotools.coverage.grid.GridCoverage2D;
-import org.geotools.coverage.grid.io.GridCoverage2DReader;
-import org.geotools.data.DefaultTransaction;
-import org.geotools.dem.overview.Overviews;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
-import org.geotools.gce.geotiff.GeoTiffWriter;
 import org.geotools.gce.imagemosaic.CatalogManagerImpl;
-import org.geotools.gce.imagemosaic.ImageMosaicReader;
 import org.geotools.gce.imagemosaic.Utils;
 import org.geotools.gce.imagemosaic.catalog.index.Indexer;
 import org.geotools.gce.imagemosaic.catalogbuilder.CatalogBuilderConfiguration;
-import org.geotools.gce.imagemosaic.properties.PropertiesCollector;
-import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.process.raster.mask.OutliersMaskProcess;
 import org.geotools.util.logging.Logging;
 import org.opengis.feature.simple.SimpleFeatureType;
@@ -107,42 +97,42 @@ public class DEMCatalogManager extends CatalogManagerImpl {
 
         return list;
     }
-
-    @Override
-    protected String prepareLocation(CatalogBuilderConfiguration runConfiguration,
-            final File fileBeingProcessed) throws IOException {
-        return super.prepareLocation(runConfiguration, getMaskedFile(fileBeingProcessed));
-    }
+//
+//    @Override
+//    protected String prepareLocation(CatalogBuilderConfiguration runConfiguration,
+//            final File fileBeingProcessed) throws IOException {
+//        return super.prepareLocation(runConfiguration, getMaskedFile(fileBeingProcessed));
+//    }
 
     private File getMaskedFile(File fileBeingProcessed) {
         return new File(fileBeingProcessed.getParent(),
                 FilenameUtils.getBaseName(fileBeingProcessed.getName()) + MASK_TIFF);
     }
 
-    @Override
-    public void updateCatalog(final String coverageName, final File fileBeingProcessed,
-            final GridCoverage2DReader inputReader, final ImageMosaicReader mosaicReader,
-            final CatalogBuilderConfiguration configuration, final GeneralEnvelope envelope,
-            final DefaultTransaction transaction,
-            final List<PropertiesCollector> propertiesCollectors) throws IOException {
-
-        if (!fileBeingProcessed.getName().toLowerCase().endsWith(MASK_TIFF)) {
-            GridCoverage2D coverage = inputReader.read(null);
-            GridCoverage2D maskedCoverage = outliersProcess
-                    .execute(coverage, 0, 10.0, 1000, 1.0, null, OutliersMaskProcess.OutputMethod.AlphaMask, null,
-                            OutliersMaskProcess.StatisticMethod.InterquartileRange);
-            File maskedFile = getMaskedFile(fileBeingProcessed);
-            GeoTiffWriter writer = new GeoTiffWriter(maskedFile);
-            writer.write(maskedCoverage, null);
-            try {
-                Overviews.add(maskedFile, 2, 4, 6, 8, 16);
-            } catch (IOException e) {
-                LOGGER.log(Level.WARNING, "Failed to add overviews to " + maskedFile, e);
-            }
-
-            super.updateCatalog(coverageName, fileBeingProcessed, inputReader, mosaicReader,
-                    configuration, envelope, transaction, propertiesCollectors);
-        } //skip masks
-    }
+//    @Override
+//    public void updateCatalog(final String coverageName, final File fileBeingProcessed,
+//            final GridCoverage2DReader inputReader, final ImageMosaicReader mosaicReader,
+//            final CatalogBuilderConfiguration configuration, final GeneralEnvelope envelope,
+//            final DefaultTransaction transaction,
+//            final List<PropertiesCollector> propertiesCollectors) throws IOException {
+//
+//        if (!fileBeingProcessed.getName().toLowerCase().endsWith(MASK_TIFF)) {
+//            GridCoverage2D coverage = inputReader.read(null);
+//            GridCoverage2D maskedCoverage = outliersProcess
+//                    .execute(coverage, 0, 10.0, 1000, 1.0, null, OutliersMaskProcess.OutputMethod.AlphaMask, null,
+//                            OutliersMaskProcess.StatisticMethod.InterquartileRange);
+//            File maskedFile = getMaskedFile(fileBeingProcessed);
+//            GeoTiffWriter writer = new GeoTiffWriter(maskedFile);
+//            writer.write(maskedCoverage, null);
+//            try {
+//                Overviews.add(maskedFile, 2, 4, 6, 8, 16);
+//            } catch (IOException e) {
+//                LOGGER.log(Level.WARNING, "Failed to add overviews to " + maskedFile, e);
+//            }
+//
+//            super.updateCatalog(coverageName, fileBeingProcessed, inputReader, mosaicReader,
+//                    configuration, envelope, transaction, propertiesCollectors);
+//        } //skip masks
+//    }
 
 }

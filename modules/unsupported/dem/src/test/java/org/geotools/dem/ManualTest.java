@@ -27,20 +27,17 @@ import javax.media.jai.Interpolation;
 import javax.media.jai.RenderedOp;
 import javax.media.jai.Warp;
 import javax.media.jai.operator.MosaicDescriptor;
-import javax.media.jai.operator.MosaicType;
 
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
 import org.geotools.coverage.grid.io.GridCoverage2DReader;
-import org.geotools.coverage.processing.Operations;
 import org.geotools.gce.geotiff.GeoTiffFormat;
 import org.geotools.geometry.GeneralEnvelope;
 import org.geotools.image.ImageWorker;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.ReferencingFactoryFinder;
 import org.geotools.referencing.operation.transform.WarpBuilder;
-import org.opengis.coverage.Coverage;
 import org.opengis.coverage.grid.GridEnvelope;
 import org.opengis.coverage.grid.GridGeometry;
 import org.opengis.geometry.Envelope;
@@ -60,7 +57,7 @@ import org.opengis.referencing.operation.TransformException;
 public class ManualTest {
 
     private String testFileOne = "dem_large-clipped.tif";
-    private String testFileTwo = "sfdem.tif";
+    private String testFileTwo = "sfdemInt.tiff";
     String targetCrs = "EPSG:4326";
 
     private GridCoverage2D coverageOne;

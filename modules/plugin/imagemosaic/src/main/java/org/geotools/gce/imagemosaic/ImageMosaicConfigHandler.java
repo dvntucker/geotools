@@ -21,7 +21,6 @@ import java.awt.image.IndexColorModel;
 import java.awt.image.SampleModel;
 import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -75,8 +74,6 @@ import org.geotools.referencing.CRS;
 import org.geotools.util.Utilities;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
-
-import com.google.common.base.Joiner;
 
 /**
  * This class is in responsible for creating and managing the catalog and the configuration of the mosaic
@@ -727,16 +724,22 @@ public class ImageMosaicConfigHandler {
                     mosaicConfiguration.getAuxiliaryDatastorePath());
         }
 
+        if (mosaicConfiguration.getFoundCRSs() != null) {
+            String crsString = String.join(",",
+                    mosaicConfiguration.getFoundCRSs().stream()
+                            .map(CRS::toSRS)
+                            .collect(java.util.stream.Collectors.toList()));
+            properties.setProperty(Utils.Prop.FOUND_CRSS, crsString);
+        }
+
+        if (mosaicConfiguration.getCrs() != null) {
+            properties.setProperty(Utils.Prop.CRS_CODE, CRS.toSRS(mosaicConfiguration.getCrs()));
+        }
+
         OutputStream outStream = null;
         String filePath = runConfiguration.getParameter(Prop.ROOT_MOSAIC_DIR) + "/"
                 // + runConfiguration.getIndexName() + ".properties"));
                 + mosaicConfiguration.getName() + ".properties";
-
-        String crsString = String.join(",",
-                mosaicConfiguration.getFoundCRSs().stream()
-                        .map(CRS::toSRS)
-                        .collect(java.util.stream.Collectors.toList()));
-        properties.setProperty(Utils.Prop.FOUND_CRSS, crsString);
 
 
         try {
@@ -850,6 +853,7 @@ public class ImageMosaicConfigHandler {
 
             // STEP 2.A
             // Preparing configuration
+
             configBuilder.setCrs(actualCRS);
             configBuilder.setHeterogenousCRS(catalogConfig.isAllowHeterogenousCRS());
             configBuilder.setLevels(resolutionLevels);

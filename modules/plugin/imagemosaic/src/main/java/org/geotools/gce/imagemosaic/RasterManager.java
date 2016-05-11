@@ -16,8 +16,7 @@
  */
 package org.geotools.gce.imagemosaic;
 
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.ColorModel;
 import java.awt.image.IndexColorModel;
@@ -917,6 +916,8 @@ public class RasterManager {
         // take ownership of the index : TODO: REMOVE THAT ONCE DEALING WITH MORE CATALOGS/RASTERMANAGERS
         // granuleCatalog = new HintedGranuleCatalog(parentReader.granuleCatalog, hints);
         granuleCatalog = parentReader.granuleCatalog;
+        granuleCatalog.setMosaicCRS(configuration.getCrs());
+        granuleCatalog.setReprojecting(configuration.isHeterogenousCRS());
         this.coverageFactory = parentReader.getGridCoverageFactory();
         this.coverageIdentifier = configuration != null ? configuration.getName() : ImageMosaicReader.UNSPECIFIED;
         this.pathType = configuration.getCatalogConfigurationBean().isAbsolutePath() ? PathType.ABSOLUTE : PathType.RELATIVE;
@@ -927,40 +928,38 @@ public class RasterManager {
         // load defaultSM and defaultCM by using the sample_image if it was provided
         loadSampleImage(configuration);
 
-        if (configuration != null) {
-            CatalogConfigurationBean catalogBean = configuration.getCatalogConfigurationBean();
-            typeName = catalogBean != null ? catalogBean.getTypeName() : null;
-            initDomains(configuration);
-            if (defaultSM == null) {
-                defaultSM = configuration.getSampleModel();
-            }
-
-            if (defaultCM == null) {
-                defaultCM = configuration.getColorModel();
-            }
-            if (defaultPalette == null) {
-                defaultPalette = configuration.getPalette();
-            }
-
-            if (defaultSM != null && defaultCM != null && defaultImageLayout == null) {
-                defaultImageLayout= new ImageLayout().setColorModel(defaultCM).setSampleModel(defaultSM);
-            }
-            
-            levels = configuration.getLevels();
-            final double[] highRes = levels[0];
-            final int numOverviews = configuration.getLevelsNum() - 1;
-            double[][] overviews = null;
-            if (numOverviews > 0) {
-                overviews = new double[numOverviews][2];
-                for (int i = 0; i < numOverviews; i++) {
-                    overviews[i][0] = levels[i+1][0];
-                    overviews[i][1] = levels[i+1][1];
-                }
-            }
-            overviewsController = new OverviewsController(highRes,
-                  numOverviews, overviews);
-            imposedEnvelope = configuration.getEnvelope();
+        CatalogConfigurationBean catalogBean = configuration.getCatalogConfigurationBean();
+        typeName = catalogBean != null ? catalogBean.getTypeName() : null;
+        initDomains(configuration);
+        if (defaultSM == null) {
+            defaultSM = configuration.getSampleModel();
         }
+
+        if (defaultCM == null) {
+            defaultCM = configuration.getColorModel();
+        }
+        if (defaultPalette == null) {
+            defaultPalette = configuration.getPalette();
+        }
+
+        if (defaultSM != null && defaultCM != null && defaultImageLayout == null) {
+            defaultImageLayout= new ImageLayout().setColorModel(defaultCM).setSampleModel(defaultSM);
+        }
+
+        levels = configuration.getLevels();
+        final double[] highRes = levels[0];
+        final int numOverviews = configuration.getLevelsNum() - 1;
+        double[][] overviews = null;
+        if (numOverviews > 0) {
+            overviews = new double[numOverviews][2];
+            for (int i = 0; i < numOverviews; i++) {
+                overviews[i][0] = levels[i+1][0];
+                overviews[i][1] = levels[i+1][1];
+            }
+        }
+        overviewsController = new OverviewsController(highRes,
+              numOverviews, overviews);
+        imposedEnvelope = configuration.getEnvelope();
     }
 
     private void updateHints(Hints hints, MosaicConfigurationBean configuration,

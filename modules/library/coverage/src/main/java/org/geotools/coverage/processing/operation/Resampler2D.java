@@ -16,13 +16,7 @@
  */
 package org.geotools.coverage.processing.operation;
 
-import it.geosolutions.jaiext.JAIExt;
-import it.geosolutions.jaiext.range.NoDataContainer;
-import it.geosolutions.jaiext.range.Range;
-
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.DataBuffer;
 import java.awt.image.IndexColorModel;
@@ -91,6 +85,10 @@ import org.opengis.referencing.operation.MathTransformFactory;
 import org.opengis.referencing.operation.NoninvertibleTransformException;
 import org.opengis.referencing.operation.TransformException;
 
+import it.geosolutions.jaiext.JAIExt;
+import it.geosolutions.jaiext.range.NoDataContainer;
+import it.geosolutions.jaiext.range.Range;
+
 
 /**
  * Implementation of the {@link Resample} operation. This implementation is provided as a
@@ -105,7 +103,7 @@ import org.opengis.referencing.operation.TransformException;
  * @author Daniele Romagnoli, GeoSolutions SAS
  * @author Nicola Lagomarsini, GeoSolutions SAS
  */
-final class Resampler2D extends GridCoverage2D {
+public final class Resampler2D extends GridCoverage2D {
     /**
      * For compatibility during cross-version serialization.
      */
