@@ -15,26 +15,17 @@
  * Lesser General Public License for more details.
  */
 
-package org.geotools.dem.attributes;
+package org.geotools.dem;
 
 import static junit.framework.TestCase.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.net.URL;
 import java.util.Optional;
 
-import org.apache.commons.io.FileUtils;
 import org.geotools.data.Query;
 import org.geotools.data.simple.SimpleFeatureIterator;
-import org.geotools.dem.DEMCatalogManager;
-import org.geotools.factory.Hints;
-import org.geotools.gce.imagemosaic.CatalogManager;
-import org.geotools.gce.imagemosaic.ImageMosaicReader;
 import org.geotools.gce.imagemosaic.catalog.GranuleCatalog;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.feature.type.AttributeDescriptor;
@@ -42,20 +33,11 @@ import org.opengis.feature.type.AttributeDescriptor;
 /**
  * Testing whether the CRS extractor actually sets the CRS on a DEM
  */
-public class CRSExtractorTest {
+public class CRSExtractorTest extends DifferentProjectionsTest {
 
-    @Rule public TemporaryFolder testFolder = new TemporaryFolder();
 
     @Test
     public void testDifferentProjections() throws Exception {
-
-        URL testDataURL = this.getClass().getResource("/diffprojections");
-        File testDataFolder = new File(testDataURL.toURI());
-        File testDirectory = testFolder.newFolder("diffprojectionstest");
-        FileUtils.copyDirectory(testDataFolder, testDirectory);
-        CatalogManager catalogManager = new DEMCatalogManager();
-        Hints creationHints = new Hints();
-        ImageMosaicReader imReader = new ImageMosaicReader(testDirectory, creationHints, catalogManager);
         assertNotNull(imReader);
 
         GranuleCatalog gc = imReader.getRasterManager("diffprojectionstest").getGranuleCatalog();
@@ -79,8 +61,5 @@ public class CRSExtractorTest {
             assertNotNull(crs);
             System.out.println(crs);
         }
-
-
-        FileUtils.forceDelete(testDirectory);
     }
 }
