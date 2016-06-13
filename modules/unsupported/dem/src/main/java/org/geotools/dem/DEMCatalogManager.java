@@ -17,20 +17,23 @@
 
 package org.geotools.dem;
 
+import java.awt.image.ColorModel;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.logging.Logger;
 
 import org.apache.commons.io.FilenameUtils;
+import org.geotools.coverage.grid.io.GridCoverage2DReader;
 import org.geotools.feature.simple.SimpleFeatureTypeBuilder;
 import org.geotools.gce.imagemosaic.CatalogManager;
-import org.geotools.gce.imagemosaic.CatalogManagerImpl;
+import org.geotools.gce.imagemosaic.MosaicConfigurationBean;
+import org.geotools.gce.imagemosaic.RasterManager;
 import org.geotools.gce.imagemosaic.Utils;
 import org.geotools.gce.imagemosaic.catalog.index.Indexer;
 import org.geotools.gce.imagemosaic.catalogbuilder.CatalogBuilderConfiguration;
-import org.geotools.process.raster.mask.OutliersMaskProcess;
 import org.geotools.util.logging.Logging;
 import org.opengis.feature.simple.SimpleFeatureType;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -47,7 +50,7 @@ public class DEMCatalogManager extends CatalogManager {
 
     @Override
     public SimpleFeatureType createDefaultSchema(CatalogBuilderConfiguration runConfiguration,
-            String name, CoordinateReferenceSystem actualCRS) {
+            CoordinateReferenceSystem actualCRS) {
         final SimpleFeatureTypeBuilder featureBuilder = new SimpleFeatureTypeBuilder();
         featureBuilder.setName(runConfiguration.getParameter(Utils.Prop.INDEX_NAME));
         featureBuilder.setNamespaceURI("http://boundlessgeo.com//");
@@ -65,7 +68,7 @@ public class DEMCatalogManager extends CatalogManager {
 
     @Override
     public List<Indexer.Collectors.Collector> customCollectors() {
-        List<Indexer.Collectors.Collector> list = new ArrayList<Indexer.Collectors.Collector>();
+        List<Indexer.Collectors.Collector> list = new ArrayList<>();
 
         Indexer.Collectors.Collector collectorDate =
                 Utils.OBJECT_FACTORY.createIndexerCollectorsCollector();
@@ -101,5 +104,17 @@ public class DEMCatalogManager extends CatalogManager {
     private File getMaskedFile(File fileBeingProcessed) {
         return new File(fileBeingProcessed.getParent(),
                 FilenameUtils.getBaseName(fileBeingProcessed.getName()) + MASK_TIFF);
+    }
+
+    @Override
+    public boolean accepts(GridCoverage2DReader coverageReader,
+            MosaicConfigurationBean mosaicConfiguration, RasterManager rasterManager)
+            throws IOException {
+        ColorModel colorModel = mosaicConfiguration.getColorModel();
+        ColorModel actualCM = coverageReader.getImageLayout().getColorModel(null);
+        if (colorModel == null) {
+            colorModel = rasterManager.defaultCM;
+        }
+        return !Utils.checkColorModels(colorModel, actualCM);
     }
 }
