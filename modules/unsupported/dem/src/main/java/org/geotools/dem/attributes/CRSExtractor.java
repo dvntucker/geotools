@@ -40,7 +40,7 @@ public class CRSExtractor extends PropertiesCollector {
 
     @Override
     public void setProperties(SimpleFeature feature) {
-        getPropertyNames().forEach(propName -> feature.setAttribute(propName, this.crsCode));
+        feature.setAttribute(this.getPropertyNames().get(0), this.crsCode);
     }
 
     @Override
