@@ -106,7 +106,7 @@ GeoTools modules and their dependencies.
     <url>http://geotools.org</url>
 
     <properties>
-        <geotools.version>14.1</geotools.version>
+        <geotools.version>15.1</geotools.version>
     </properties>
 
     <build>

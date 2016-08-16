@@ -135,7 +135,7 @@ Dependencies
 Please ensure your pom.xml includes the following::
 
   <properties>
-      <geotools.version>14.0</geotools.version>
+      <geotools.version>15.1</geotools.version>
   </properties>
 
   <dependencies>
