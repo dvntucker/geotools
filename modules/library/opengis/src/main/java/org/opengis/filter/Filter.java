@@ -9,6 +9,8 @@
  */
 package org.opengis.filter;
 
+import java.util.function.Predicate;
+
 import org.opengis.annotation.Extension;
 import org.opengis.annotation.XmlElement;
 import org.opengis.feature.Feature;
@@ -45,7 +47,7 @@ import org.opengis.filter.expression.Function;
  * @since GeoAPI 2.0
  */
 @XmlElement("Filter")
-public interface Filter {
+public interface Filter extends Predicate<Object> {
     
     /**
      * Placeholder Filter that evaulates to {@code true}.
@@ -83,4 +85,8 @@ public interface Filter {
      */
     @Extension
     Object accept(FilterVisitor visitor, Object extraData);
+
+    default boolean test(Object o) {
+        return this.evaluate(o);
+    }
 }

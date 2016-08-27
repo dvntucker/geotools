@@ -28,7 +28,7 @@ package org.opengis.feature;
  *
  * @source $URL$
  */
-public interface FeatureVisitor {
+public interface FeatureVisitor<F extends Feature> {
     /**
      * Visit the provided feature.
      * <p>
@@ -36,5 +36,5 @@ public interface FeatureVisitor {
      * to learn more - the provided feature may be invalid, or read only.
      * @param feature
      */
-    void visit(Feature feature);
+    void visit(F feature);
 }

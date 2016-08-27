@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.geotools.data.Query;
@@ -138,8 +139,12 @@ public class ListFeatureCollection extends AbstractFeatureCollection implements 
      public int size() {
          return list.size();
      }
-    
-     @Override
+
+    @Override public Spliterator<SimpleFeature> spliterator() {
+        return list.spliterator();
+    }
+
+    @Override
      protected Iterator<SimpleFeature> openIterator() {
          Iterator<SimpleFeature> it = list.iterator();
          return it;

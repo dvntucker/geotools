@@ -47,7 +47,7 @@ public interface FeatureIterator<F extends Feature> extends Closeable {
      * </p>
      * @return true if more Features exist, false otherwise.
      */
-    public boolean hasNext();
+    boolean hasNext();
 
     /**
      * Get the next Feature in this iteration.
@@ -56,11 +56,11 @@ public interface FeatureIterator<F extends Feature> extends Closeable {
      *
      * @throws java.util.NoSuchElementException If no more Features exist.
      */
-    public F next() throws java.util.NoSuchElementException;
+    F next() throws java.util.NoSuchElementException;
 
     /**
      * Closes this iterator and releases any system resources associated
      * with it.
      */
-    public void close(); // default implementation here does not throw IOException
+    void close(); // default implementation here does not throw IOException
 }

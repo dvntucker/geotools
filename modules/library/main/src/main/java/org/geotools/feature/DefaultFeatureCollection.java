@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.SortedMap;
+import java.util.Spliterator;
 import java.util.TreeMap;
 import java.util.logging.Logger;
 
@@ -527,8 +528,12 @@ public class DefaultFeatureCollection implements SimpleFeatureCollection, Collec
         return contents.values().toArray(a);
     }
 
-	
-	public void close( FeatureIterator<SimpleFeature>  close ) {
+    @Override
+    public Spliterator<SimpleFeature> spliterator() {
+        return contents.values().spliterator();
+    }
+
+    public void close( FeatureIterator<SimpleFeature>  close ) {
         if( close instanceof FeatureIteratorImpl){
         	FeatureIteratorImpl<SimpleFeature> wrapper = (FeatureIteratorImpl<SimpleFeature>) close;
         	wrapper.close();

@@ -19,6 +19,7 @@ package org.geotools.data.memory;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Spliterator;
 import java.util.TreeMap;
 
 import org.geotools.data.DataUtilities;
@@ -64,6 +65,11 @@ public class MemoryFeatureCollection extends AbstractFeatureCollection implement
 
     public int size() {
         return contents.size();
+    }
+
+    @Override
+    public Spliterator<SimpleFeature> spliterator() {
+        return contents.values().spliterator();
     }
 
     public MemoryIterator openIterator() {

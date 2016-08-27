@@ -17,10 +17,13 @@
 
 package org.geotools.data.collection;
 
+import org.geotools.data.FeatureStream;
+import org.geotools.factory.CommonFactoryFinder;
 import org.junit.Before;
 import java.util.Random;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -34,9 +37,14 @@ import org.geotools.referencing.crs.DefaultEngineeringCRS;
 
 import org.opengis.feature.simple.SimpleFeature;
 import org.opengis.feature.simple.SimpleFeatureType;
+import org.opengis.feature.type.FeatureType;
+import org.opengis.filter.Filter;
+import org.opengis.filter.FilterFactory;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import org.junit.Test;
+
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.*;
 
 
@@ -129,6 +137,39 @@ public class ListFeatureCollectionTest {
             assertTrue(copy.remove(f));
         }
         assertTrue(copy.isEmpty());
+    }
+
+    @Test
+    public void stream() {
+        createPointFeatures(WORLD, 42);
+        List<SimpleFeature> copy = new ArrayList<>(featureList);
+        FeatureStream<SimpleFeatureType, SimpleFeature> featureStream = new FeatureStream<>(
+            featureCollection);
+        Filter f = Filter.INCLUDE;
+        featureStream.filter(f);
+        featureStream.forEach(copy::remove);
+
+        assertTrue(copy.isEmpty());
+    }
+
+    @Test
+    public void map() {
+        createPointFeatures(WORLD, 20);
+        List<SimpleFeature> copy = new ArrayList<>(featureList);
+        FeatureStream<SimpleFeatureType, SimpleFeature> featureStream = new FeatureStream<>(
+            featureCollection);
+
+        List<String> points = featureStream.map(simpleFeature -> {
+            Point defaultGeometry = (Point) simpleFeature.getDefaultGeometry();
+            return defaultGeometry.getX() + "," + defaultGeometry.getY();
+        }).collect(toList());
+
+        copy.stream().forEach(simpleFeature -> {
+            Point defaultGeometry = (Point) simpleFeature.getDefaultGeometry();
+            String point = defaultGeometry.getX() + "," + defaultGeometry.getY();
+            points.remove(point);
+        });
+        assertTrue(points.isEmpty());
     }
 
     /**

@@ -19,6 +19,7 @@ package org.geotools.feature;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Spliterator;
 
 import org.geotools.data.FeatureSource;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -169,7 +170,7 @@ public interface FeatureCollection<T extends FeatureType, F extends Feature> {
      *
      * @since 2.5
      */
-    void accepts(FeatureVisitor visitor, ProgressListener progress) throws IOException;
+    void accepts(FeatureVisitor<F> visitor, ProgressListener progress) throws IOException;
 
     /**
      * SimpleFeatureCollection "view" indicated by provided filter.
@@ -253,5 +254,9 @@ public interface FeatureCollection<T extends FeatureType, F extends Feature> {
     Object[] toArray();
     
     /** @see java.util.Collection#toArray(Object[]) */
-    <O> O[] toArray(O[] a);    
+    <O> O[] toArray(O[] a);
+
+    default Spliterator<F> spliterator() {
+        throw new UnsupportedOperationException();
+    }
 }
