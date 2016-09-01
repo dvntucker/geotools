@@ -19,6 +19,7 @@ package org.geotools.data;
 import java.awt.RenderingHints;
 import java.io.IOException;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import org.geotools.factory.Hints;
 import org.geotools.feature.FeatureCollection;
@@ -250,5 +251,9 @@ public interface FeatureSource<T extends FeatureType, F extends Feature>{
      * @return a set of {@code RenderingHints#Key} objects; may be empty but never {@code null}
      */
     public Set<RenderingHints.Key> getSupportedHints();
+
+    default Stream<F> stream() {
+        return new FeatureStream<T, F>(this);
+    }
 
 }

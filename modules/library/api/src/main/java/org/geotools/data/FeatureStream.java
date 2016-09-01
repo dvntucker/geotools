@@ -59,6 +59,7 @@ public class FeatureStream<T extends FeatureType, F extends Feature> implements 
 
     @Override public Stream<F> filter(Predicate<? super F> predicate) {
         Filter featureFilter;
+
         if (!(predicate instanceof Filter)) {
             featureFilter = new PredicateWrappingFilter((Predicate<Object>) predicate);
         } else {
