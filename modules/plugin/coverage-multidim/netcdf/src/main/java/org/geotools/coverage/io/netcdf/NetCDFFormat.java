@@ -39,7 +39,13 @@ import org.opengis.parameter.ParameterDescriptor;
 
 public class NetCDFFormat extends AbstractGridFormat{
 
-    public static final ParameterDescriptor<Filter> FILTER = new DefaultParameterDescriptor<Filter>("Filter", Filter.class, null, null);
+    static final ParameterDescriptor<Filter> FILTER = new DefaultParameterDescriptor<Filter>("Filter", Filter.class, null, null);
+
+    static final ParameterDescriptor<Boolean> ENHANCE_COORD_SYS =
+        new DefaultParameterDescriptor<>("Enhance Coordinate Systems", Boolean.class, null, true);
+
+    static final ParameterDescriptor<Boolean> ENHANCE_SCALE_MISSING =
+        new DefaultParameterDescriptor<>("Enhance Scale/Missing", Boolean.class, null, false);
 
     private final static Logger LOGGER = Logging
             .getLogger("org.geotools.coverage.io.netcdf.NetCDFFormat");
@@ -65,19 +71,20 @@ public class NetCDFFormat extends AbstractGridFormat{
 
         // reading parameters
         readParameters = new ParameterGroup(new DefaultParameterDescriptorGroup(mInfo,
-                new GeneralParameterDescriptor[]{
-                        READ_GRIDGEOMETRY2D,
-//                        INPUT_TRANSPARENT_COLOR,
-//                BACKGROUND_VALUES,
-//                SUGGESTED_TILE_SIZE,
-//                ALLOW_MULTITHREADING,
-//                MAX_ALLOWED_TILES,
+            new GeneralParameterDescriptor[] { READ_GRIDGEOMETRY2D,
+                //                INPUT_TRANSPARENT_COLOR,
+                //                BACKGROUND_VALUES,
+                //                SUGGESTED_TILE_SIZE,
+                //                ALLOW_MULTITHREADING,
+                //                MAX_ALLOWED_TILES,
                 TIME,
                 ELEVATION,
                 FILTER,
-//                SORT_BY,
-//                MERGE_BEHAVIOR
-        }));
+                ENHANCE_COORD_SYS,
+                ENHANCE_SCALE_MISSING
+                //                SORT_BY,
+                //                MERGE_BEHAVIOR
+            }));
 
         // reading parameters
         writeParameters = null;

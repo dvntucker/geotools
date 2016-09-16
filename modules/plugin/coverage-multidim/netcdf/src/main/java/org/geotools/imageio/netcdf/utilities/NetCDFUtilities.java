@@ -263,42 +263,6 @@ public class NetCDFUtilities {
 
     final static Set<String> EXCLUDED_ATTRIBUTES = new HashSet<String>();
 
-    private static final String ENHANCE_COORD_SYSTEMS = "org.geotools.coverage.io.netcdf.enhance.CoordSystems";
-
-    private static final String ENHANCE_SCALE_MISSING = "org.geotools.coverage.io.netcdf.enhance.ScaleMissing";
-
-    private static final String ENHANCE_CONVERT_ENUMS = "org.geotools.coverage.io.netcdf.enhance.ConvertEnums";
-
-    private static final String ENHANCE_SCALE_MISSING_DEFER = "org.geotools.coverage.io.netcdf.enhance.ScaleMissingDefer";
-
-    private static boolean ENHANCE_SCALE_OFFSET = false;
-
-    static {
-        //TODO remove this block when enhance mode can be set some other way, possibly via read params
-
-        //Default used to be to just enhance coord systems
-        EnumSet<NetcdfDataset.Enhance> defaultEnhanceMode = EnumSet.of(NetcdfDataset.Enhance.CoordSystems);
-
-        if (System.getProperty(ENHANCE_COORD_SYSTEMS) != null
-            && !Boolean.getBoolean(ENHANCE_COORD_SYSTEMS)) {
-            defaultEnhanceMode.remove(NetcdfDataset.Enhance.CoordSystems);
-        }
-
-        if (Boolean.getBoolean(ENHANCE_SCALE_MISSING)) {
-            defaultEnhanceMode.add(NetcdfDataset.Enhance.ScaleMissing);
-            ENHANCE_SCALE_OFFSET = true;
-        }
-
-        if (Boolean.getBoolean(ENHANCE_CONVERT_ENUMS)) {
-            defaultEnhanceMode.add(NetcdfDataset.Enhance.ConvertEnums);
-        }
-
-        if (Boolean.getBoolean(ENHANCE_SCALE_MISSING_DEFER)) {
-            defaultEnhanceMode.add(NetcdfDataset.Enhance.ScaleMissingDefer);
-        }
-
-        NetcdfDataset.setDefaultEnhanceMode(defaultEnhanceMode);
-    }
 
     /**
      * Global attribute for coordinate coverageDescriptorsCache.
@@ -490,7 +454,7 @@ public class NetCDFUtilities {
     public static int getRawDataType(final VariableIF variable) {
         VariableDS ds = (VariableDS) variable;
         final DataType type;
-        if (ENHANCE_SCALE_OFFSET) {
+        if (ds.getEnhanceMode() != null && ds.getEnhanceMode().contains(Enhance.ScaleMissing)) {
             type = ds.getDataType();
         } else {
             type = ds.getOriginalDataType();
@@ -659,7 +623,7 @@ public class NetCDFUtilities {
 
     /**
      * Returns a {@code NetcdfDataset} given an input object
-     * 
+     *
      * @param input
      *                the input object (usually a {@code File}, a
      *                {@code String} or a {@code FileImageInputStreamExt).
@@ -668,20 +632,22 @@ public class NetCDFUtilities {
      *                 if some error occur while opening the dataset.
      * @throws {@link IllegalArgumentException}
      *                 in case the specified input is a directory
+     * @param enhanceMode
      */
-    public static NetcdfDataset getDataset(Object input) throws IOException {
+    public static NetcdfDataset getDataset(Object input, Set<Enhance> enhanceMode) throws IOException {
         NetcdfDataset dataset = null;
+        String datasetPath = null;
         if (input instanceof File) {
             final File file= (File) input;
             if (!file.isDirectory()) {
-                dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                datasetPath = file.getPath();
             } else {
                 throw new IllegalArgumentException("Error occurred during NetCDF file reading: The input file is a Directory.");
             }
         } else if (input instanceof String) {
             File file = new File((String) input);
             if (!file.isDirectory()) {
-                dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                datasetPath = file.getPath();
             } else {
                 throw new IllegalArgumentException( "Error occurred during NetCDF file reading: The input file is a Directory.");
             }
@@ -691,27 +657,30 @@ public class NetCDFUtilities {
             if (protocol.equalsIgnoreCase("file")) {
                 File file = ImageIOUtilities.urlToFile(tempURL);
                 if (!file.isDirectory()) {
-                    dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                    datasetPath = file.getPath();
                 } else {
                     throw new IllegalArgumentException( "Error occurred during NetCDF file reading: The input file is a Directory.");
                 }
             } else if (protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("dods")) {
-                dataset = NetcdfDataset.acquireDataset(tempURL.toExternalForm(), null);
+                datasetPath = tempURL.toExternalForm();
             }
         } else if (input instanceof URIImageInputStream) {
             final URIImageInputStream uriInStream = (URIImageInputStream) input;
-            dataset = NetcdfDataset.acquireDataset(uriInStream.getUri().toString(), null);
+            datasetPath = uriInStream.getUri().toString();
         } else if (input instanceof AccessibleStream) {
             final AccessibleStream<?> stream= (AccessibleStream<?>) input;
             if (stream.getBinding().isAssignableFrom(File.class)) {
                 final File file = ((AccessibleStream<File>) input).getTarget();
                 if (!file.isDirectory()) {
-                    dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                    datasetPath = file.getPath();
                 }
             } else {
                 throw new IllegalArgumentException("Error occurred during NetCDF file reading: The input file is a Directory.");
             }
         }
+
+        dataset = NetcdfDataset.acquireDataset(null, datasetPath, enhanceMode, -1, null, null);
+
         return dataset;
     }
 

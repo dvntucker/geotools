@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -102,6 +103,7 @@ import ucar.nc2.Variable;
 import ucar.nc2.constants.AxisType;
 import ucar.nc2.dataset.CoordinateAxis;
 import ucar.nc2.dataset.CoordinateSystem;
+import ucar.nc2.dataset.NetcdfDataset;
 import ucar.nc2.dataset.VariableDS;
 
 /**
@@ -481,7 +483,6 @@ public class VariableAdapter extends CoverageSourceDescriptor {
      * @throws Exception
      */
     private void init() throws Exception {
-
         // initialize the various domains
         initSpatialElements();
 
@@ -1020,10 +1021,12 @@ public class VariableAdapter extends CoverageSourceDescriptor {
         return sampleModel;
     }
 
-    public VariableAdapter(NetCDFImageReader reader, Name coverageName, VariableDS variable) throws Exception {
+    public VariableAdapter(NetCDFImageReader reader, Name coverageName, VariableDS variable,
+        Set<NetcdfDataset.Enhance> enhanceMode) throws Exception {
         this.variableDS = variable;
         this.reader = reader;
         this.coverageName = coverageName;
+        variableDS.enhance(enhanceMode);
         setName(variable.getFullName());
         init();
     }

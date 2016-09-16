@@ -204,12 +204,15 @@ public class NetCDFReaderTest extends Assert {
      * @throws ParseException
      */
     @Test
-    @Ignore
     public void testScaleAndOffset() throws IOException, FactoryException, ParseException {
         File file = TestData.file(this, "o3_no2_so.nc");
         final NetCDFReader reader = new NetCDFReader(file, null);
         String coverageName = "NO2";
-        GeneralParameterValue[] values = new GeneralParameterValue[] {};
+
+        ParameterValue<Boolean> enhanceParam = NetCDFFormat.ENHANCE_SCALE_MISSING.createValue();
+        enhanceParam.setValue(true);
+
+        GeneralParameterValue[] values = new GeneralParameterValue[] {enhanceParam};
         GridCoverage2D coverage = reader.read(coverageName, values);
 
         float[] result = coverage

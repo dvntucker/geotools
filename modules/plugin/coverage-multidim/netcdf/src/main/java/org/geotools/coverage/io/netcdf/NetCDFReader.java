@@ -602,6 +602,23 @@ public class NetCDFReader extends AbstractGridCoverage2DReader implements Struct
             return;
         }
 
+        //Enhance parameters
+        if (name.equals(NetCDFFormat.ENHANCE_COORD_SYS.getName())) {
+            if (gridSource instanceof NetCDFSource) {
+                Boolean enhanceCoordSys = param.booleanValue();
+                ((NetCDFSource)gridSource).setEnhanceCoordSys(enhanceCoordSys);
+                return;
+            }
+        }
+
+        if (name.equals(NetCDFFormat.ENHANCE_SCALE_MISSING.getName())) {
+            if (gridSource instanceof NetCDFSource) {
+                Boolean enhanceScaleMissing = param.booleanValue();
+                ((NetCDFSource)gridSource).setEnhanceScaleMissing(enhanceScaleMissing);
+                return;
+            }
+        }
+
         String paramName = name.getCode();
         if (((NetCDFSource) gridSource).isParameterSupported(name)) {
             final Object value = param.getValue();

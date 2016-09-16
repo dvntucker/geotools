@@ -48,6 +48,9 @@ public class NetCDFSource extends DefaultCoverageSource {
 
     Set<ParameterDescriptor<List>> dynamicParameters = null;
 
+    private boolean enhanceCoordSys = true;
+    private boolean enhanceScaleMissing = true;
+
     public NetCDFSource(final NetCDFImageReader reader, final Name name ) {
         super(name, reader.getCoverageDescriptor(name));
         this.reader = reader;
@@ -93,5 +96,14 @@ public class NetCDFSource extends DefaultCoverageSource {
             }
         }
         return dynamicParameters;
+    }
+
+    void setEnhanceCoordSys(boolean enhanceCoordSys) {
+        reader.setEnhanceCoordSys(enhanceCoordSys);
+    }
+
+
+    void setEnhanceScaleMissing(boolean enhanceScaleMissing) {
+        reader.setEnhanceScaleMissing(enhanceScaleMissing);
     }
 }
