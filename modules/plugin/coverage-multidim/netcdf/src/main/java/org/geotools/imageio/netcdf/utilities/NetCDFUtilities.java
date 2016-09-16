@@ -263,6 +263,7 @@ public class NetCDFUtilities {
 
     final static Set<String> EXCLUDED_ATTRIBUTES = new HashSet<String>();
 
+
     /**
      * Global attribute for coordinate coverageDescriptorsCache.
      * 
@@ -333,7 +334,6 @@ public class NetCDFUtilities {
         EXCLUDED_ATTRIBUTES.add(DESCRIPTION);
         EXCLUDED_ATTRIBUTES.add(STANDARD_NAME);
 
-        NetcdfDataset.setDefaultEnhanceMode(EnumSet.of(Enhance.CoordSystems));
         HashSet<String> unsupportedSet = new HashSet<String>();
         unsupportedSet.add("OSEQD");
         UNSUPPORTED_DIMENSIONS = Collections.unmodifiableSet(unsupportedSet);
@@ -453,7 +453,12 @@ public class NetCDFUtilities {
      */
     public static int getRawDataType(final VariableIF variable) {
         VariableDS ds = (VariableDS) variable;
-        final DataType type = ds.getOriginalDataType();
+        final DataType type;
+        if (ds.getEnhanceMode() != null && ds.getEnhanceMode().contains(Enhance.ScaleMissing)) {
+            type = ds.getDataType();
+        } else {
+            type = ds.getOriginalDataType();
+        }
         return transcodeNetCDFDataType(type,variable.isUnsigned());
     }
 
@@ -618,7 +623,7 @@ public class NetCDFUtilities {
 
     /**
      * Returns a {@code NetcdfDataset} given an input object
-     * 
+     *
      * @param input
      *                the input object (usually a {@code File}, a
      *                {@code String} or a {@code FileImageInputStreamExt).
@@ -627,20 +632,22 @@ public class NetCDFUtilities {
      *                 if some error occur while opening the dataset.
      * @throws {@link IllegalArgumentException}
      *                 in case the specified input is a directory
+     * @param enhanceMode
      */
-    public static NetcdfDataset getDataset(Object input) throws IOException {
+    public static NetcdfDataset getDataset(Object input, Set<Enhance> enhanceMode) throws IOException {
         NetcdfDataset dataset = null;
+        String datasetPath = null;
         if (input instanceof File) {
             final File file= (File) input;
             if (!file.isDirectory()) {
-                dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                datasetPath = file.getPath();
             } else {
                 throw new IllegalArgumentException("Error occurred during NetCDF file reading: The input file is a Directory.");
             }
         } else if (input instanceof String) {
             File file = new File((String) input);
             if (!file.isDirectory()) {
-                dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                datasetPath = file.getPath();
             } else {
                 throw new IllegalArgumentException( "Error occurred during NetCDF file reading: The input file is a Directory.");
             }
@@ -650,27 +657,30 @@ public class NetCDFUtilities {
             if (protocol.equalsIgnoreCase("file")) {
                 File file = ImageIOUtilities.urlToFile(tempURL);
                 if (!file.isDirectory()) {
-                    dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                    datasetPath = file.getPath();
                 } else {
                     throw new IllegalArgumentException( "Error occurred during NetCDF file reading: The input file is a Directory.");
                 }
             } else if (protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("dods")) {
-                dataset = NetcdfDataset.acquireDataset(tempURL.toExternalForm(), null);
+                datasetPath = tempURL.toExternalForm();
             }
         } else if (input instanceof URIImageInputStream) {
             final URIImageInputStream uriInStream = (URIImageInputStream) input;
-            dataset = NetcdfDataset.acquireDataset(uriInStream.getUri().toString(), null);
+            datasetPath = uriInStream.getUri().toString();
         } else if (input instanceof AccessibleStream) {
             final AccessibleStream<?> stream= (AccessibleStream<?>) input;
             if (stream.getBinding().isAssignableFrom(File.class)) {
                 final File file = ((AccessibleStream<File>) input).getTarget();
                 if (!file.isDirectory()) {
-                    dataset = NetcdfDataset.acquireDataset(file.getPath(), null);
+                    datasetPath = file.getPath();
                 }
             } else {
                 throw new IllegalArgumentException("Error occurred during NetCDF file reading: The input file is a Directory.");
             }
         }
+
+        dataset = NetcdfDataset.acquireDataset(null, datasetPath, enhanceMode, -1, null, null);
+
         return dataset;
     }
 

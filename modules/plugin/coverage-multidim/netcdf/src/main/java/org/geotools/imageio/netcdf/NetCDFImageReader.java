@@ -37,6 +37,7 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -110,6 +111,9 @@ import ucar.nc2.dataset.VariableDS;
  */
 public class NetCDFImageReader extends GeoSpatialImageReader implements FileSetManager{
 
+    private boolean enhanceCoordSys = true;
+    private boolean enhanceScaleMissing = false;
+
     /** INTERNAL_INDEX_CREATION_PAGE_SIZE */
     private static final int INTERNAL_INDEX_CREATION_PAGE_SIZE = 1000;
 
@@ -170,18 +174,20 @@ public class NetCDFImageReader extends GeoSpatialImageReader implements FileSetM
         NetcdfDataset dataset = null;
         if (input instanceof URIImageInputStream) {
             URIImageInputStream uriInStream = (URIImageInputStream) input;
-            dataset = NetcdfDataset.acquireDataset(uriInStream.getUri().toString(), null);
+            dataset = NetcdfDataset.acquireDataset(null, uriInStream.getUri().toString(),
+                this.createEnhanceMode(), -1, null, null);
         }
         if (input instanceof URL) {
             final URL tempURL = (URL) input;
             String protocol = tempURL.getProtocol();
             if (protocol.equalsIgnoreCase("http") || protocol.equalsIgnoreCase("dods")) {
-                dataset = NetcdfDataset.acquireDataset(tempURL.toExternalForm(), null);
+                dataset = NetcdfDataset.acquireDataset(null, tempURL.toExternalForm(),
+                    this.createEnhanceMode(), -1, null, null);
             }
         }
 
         if (dataset == null) {
-            dataset = NetCDFUtilities.getDataset(input);
+            dataset = NetCDFUtilities.getDataset(input, this.createEnhanceMode());
         }
 
         return dataset;
@@ -563,7 +569,8 @@ public class NetCDFImageReader extends GeoSpatialImageReader implements FileSetM
 //                else {
 //                    throw new IllegalArgumentException("Unable to locate descriptor for Coverage: "+name);
 //                }
-                cd = new VariableAdapter(this, name, (VariableDS) getVariableByName(origName));
+                cd = new VariableAdapter(this, name, (VariableDS) getVariableByName(origName),
+                    this.createEnhanceMode());
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
@@ -582,6 +589,7 @@ public class NetCDFImageReader extends GeoSpatialImageReader implements FileSetM
         final Slice2DIndex slice2DIndex = getSlice2DIndex(imageIndex);
         final String variableName=slice2DIndex.getVariableName();
         final VariableAdapter wrapper=getCoverageDescriptor(new NameImpl(variableName));
+        wrapper.variableDS.enhance(this.createEnhanceMode());
 
         /*
          * Fetches the parameters that are not already processed by utility
@@ -1008,5 +1016,34 @@ public class NetCDFImageReader extends GeoSpatialImageReader implements FileSetM
         }
         catalog.dispose();
         ancillaryFileManager.purge();
+    }
+
+    private Set<NetcdfDataset.Enhance> createEnhanceMode() {
+        EnumSet<NetcdfDataset.Enhance> enhanceMode = EnumSet.noneOf(NetcdfDataset.Enhance.class);
+        if (enhanceCoordSys) {
+            enhanceMode.add(NetcdfDataset.Enhance.CoordSystems);
+        }
+
+        if (enhanceScaleMissing) {
+            enhanceMode.add(NetcdfDataset.Enhance.ScaleMissing);
+        }
+
+        return enhanceMode;
+    }
+
+    public boolean isEnhanceCoordSys() {
+        return enhanceCoordSys;
+    }
+
+    public void setEnhanceCoordSys(boolean enhanceCoordSys) {
+        this.enhanceCoordSys = enhanceCoordSys;
+    }
+
+    public boolean isEnhanceScaleMissing() {
+        return enhanceScaleMissing;
+    }
+
+    public void setEnhanceScaleMissing(boolean enhanceScaleMissing) {
+        this.enhanceScaleMissing = enhanceScaleMissing;
     }
 }

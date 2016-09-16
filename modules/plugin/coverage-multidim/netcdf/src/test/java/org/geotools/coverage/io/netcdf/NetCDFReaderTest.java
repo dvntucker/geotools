@@ -18,6 +18,7 @@ package org.geotools.coverage.io.netcdf;
 
 import it.geosolutions.jaiext.JAIExt;
 import it.geosolutions.jaiext.range.NoDataContainer;
+import ucar.nc2.dataset.NetcdfDataset;
 
 import java.awt.Dimension;
 import java.awt.Rectangle;
@@ -193,6 +194,32 @@ public class NetCDFReaderTest extends Assert {
                 }
             }
         }
+    }
+
+    /**
+     * This test is currently set to ignore because its behavior is controlled by a system property
+     * which makes it difficult to test in isolation.
+     * @throws IOException
+     * @throws FactoryException
+     * @throws ParseException
+     */
+    @Test
+    public void testScaleAndOffset() throws IOException, FactoryException, ParseException {
+        File file = TestData.file(this, "o3_no2_so.nc");
+        final NetCDFReader reader = new NetCDFReader(file, null);
+        String coverageName = "NO2";
+
+        ParameterValue<Boolean> enhanceParam = NetCDFFormat.ENHANCE_SCALE_MISSING.createValue();
+        enhanceParam.setValue(true);
+
+        GeneralParameterValue[] values = new GeneralParameterValue[] {enhanceParam};
+        GridCoverage2D coverage = reader.read(coverageName, values);
+
+        float[] result = coverage
+            .evaluate((DirectPosition) new DirectPosition2D(DefaultGeographicCRS.WGS84, 5.0, 45.0),
+                new float[1]);
+
+        assertEquals(1.615991, result[0], 1e-6f);
     }
 
     @Test
