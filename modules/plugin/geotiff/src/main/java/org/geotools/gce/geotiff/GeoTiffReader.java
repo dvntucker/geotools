@@ -50,6 +50,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -81,11 +82,7 @@ import org.geotools.coverage.TypeMap;
 import org.geotools.coverage.grid.GridCoverage2D;
 import org.geotools.coverage.grid.GridEnvelope2D;
 import org.geotools.coverage.grid.GridGeometry2D;
-import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
-import org.geotools.coverage.grid.io.AbstractGridFormat;
-import org.geotools.coverage.grid.io.GridCoverage2DReader;
-import org.geotools.coverage.grid.io.GroundControlPoints;
-import org.geotools.coverage.grid.io.OverviewPolicy;
+import org.geotools.coverage.grid.io.*;
 import org.geotools.coverage.grid.io.imageio.MaskOverviewProvider;
 import org.geotools.coverage.grid.io.imageio.MaskOverviewProvider.MaskInfo;
 import org.geotools.coverage.grid.io.imageio.geotiff.GeoTiffIIOMetadataDecoder;
@@ -195,7 +192,9 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
 	 */
 	public GeoTiffReader(Object input, Hints uHints) throws DataSourceException {
 	    super(input,uHints);
-               
+        LOGGER.info("Input type: " + input.getClass().toString());
+
+
 		// /////////////////////////////////////////////////////////////////////
 		//
 		// Set the source being careful in case it is an URL pointing to a file
@@ -204,11 +203,26 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
 		try {
 			
 			// setting source
-			if (input instanceof URL) {
-				final URL sourceURL = (URL) input;
-				source = DataUtilities.urlToFile(sourceURL);
-			}
+            if (input instanceof String) {
+                LOGGER.info("Checking if string is URL - " + (String)input);
 
+                if (((String) input).toLowerCase().startsWith("file:")) {
+                    LOGGER.info("Found file URL");
+                    source = DataUtilities.urlToFile(new URL((String)input));
+                } else if (((String) input).toLowerCase().startsWith("s3:")) {
+                    LOGGER.info("Found S3 URL");
+                    source = new S3ImageInputStreamImpl((String)input);
+                }
+            }
+
+            if (input instanceof URL) {
+                final URL sourceURL = (URL) input;
+                if ("s3".equals(sourceURL.getProtocol())) {
+                    source = new S3ImageInputStreamImpl(sourceURL);
+                } else {
+                    source = DataUtilities.urlToFile(sourceURL);
+                }
+			}
 			closeMe = true;
 
 			// /////////////////////////////////////////////////////////////////////
@@ -629,9 +643,13 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                             ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
                     pbjRead.add(imageChoice - extOvrImgChoice);
                 } else {
-                    pbjRead.add(inStreamSPI != null ? inStreamSPI.createInputStreamInstance(source,
-                            ImageIO.getUseCache(), ImageIO.getCacheDirectory()) : ImageIO
-                            .createImageInputStream(source));
+                    if (source instanceof ImageInputStream) {
+                        pbjRead.add(source);
+                    } else {
+                        pbjRead.add(inStreamSPI != null ? inStreamSPI.createInputStreamInstance(source,
+                                ImageIO.getUseCache(), ImageIO.getCacheDirectory()) : ImageIO
+                                .createImageInputStream(source));
+                    }
                     // Setting correct ImageChoice (taking into account overviews and masks)
                     int overviewImageIndex = dtLayout.getInternalOverviewImageIndex(imageChoice);
                     int index = overviewImageIndex >= 0 ? overviewImageIndex : 0;

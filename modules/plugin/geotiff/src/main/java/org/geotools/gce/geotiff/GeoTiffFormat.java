@@ -50,6 +50,7 @@ import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.stream.ImageInputStream;
 
 import org.geotools.coverage.grid.io.AbstractGridFormat;
+import org.geotools.coverage.grid.io.S3ImageInputStreamImpl;
 import org.geotools.coverage.grid.io.imageio.GeoToolsWriteParams;
 import org.geotools.coverage.grid.io.imageio.geotiff.GeoTiffIIOMetadataDecoder;
 import org.geotools.coverage.grid.io.imageio.geotiff.TiePoint;
@@ -286,8 +287,14 @@ public class GeoTiffFormat extends AbstractGridFormat implements Format {
 			URL url = (URL) source;
 
 			try {
-				final File file = DataUtilities.urlToFile(url); 
-				return new GeoTiffReader(file, hints);
+				LOGGER.info("Source is a URL - Protocol:" + url.getProtocol());
+				if ("file".equals(url.getProtocol())) {
+					final File file = DataUtilities.urlToFile(url);
+					return new GeoTiffReader(file, hints);
+				} else if ("s3".equals(url.getProtocol())) {
+					S3ImageInputStreamImpl s3is = new S3ImageInputStreamImpl(url);
+					return new GeoTiffReader(s3is, hints);
+				}
 			} catch (DataSourceException e) {
 				if (LOGGER.isLoggable(Level.WARNING))
 					LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);

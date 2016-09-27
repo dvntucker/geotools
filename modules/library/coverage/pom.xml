@@ -103,7 +103,17 @@
   </contributors>
   -->
 
-
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-bom</artifactId>
+            <version>1.11.36</version>
+            <type>pom</type>
+            <scope>import</scope>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
   <!-- =========================================================== -->
   <!--     Dependency Management                                   -->
   <!-- =========================================================== -->
@@ -269,8 +279,11 @@
 	<dependency>
 		<groupId>it.geosolutions.jaiext.vectorbin</groupId>
 		<artifactId>jt-vectorbin</artifactId>
-	</dependency>		
-    
+	</dependency>
+  <dependency>
+      <groupId>com.amazonaws</groupId>
+      <artifactId>aws-java-sdk-s3</artifactId>
+  </dependency>
     <!-- Test dependencies -->
     <dependency>
       <groupId>org.geotools</groupId>
