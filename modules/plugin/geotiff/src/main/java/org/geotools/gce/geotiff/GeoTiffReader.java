@@ -70,6 +70,7 @@ import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageInputStreamSpi;
 import javax.imageio.stream.ImageInputStream;
+import javax.imageio.stream.ImageInputStreamImpl;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
@@ -557,6 +558,8 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
 		Color inputTransparentColor=null;
 		OverviewPolicy overviewPolicy=null;
 		int[] suggestedTileSize=null;
+
+        LOGGER.info("GeoTiffReader.read - source:" + this.source.getClass());
 		if (params != null) {
 
 			//
@@ -628,10 +631,12 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             // Image Index used for the Overview management
             if (maskOvrProvider != null) {
                 if (maskOvrProvider.isExternalOverview(imageChoice)) {
+                    LOGGER.info("GeoTiffReader.read - maskOvrProvider && isExternalOverview");
                     pbjRead.add(maskOvrProvider.getExternalOverviewInputStreamSpi()
                             .createInputStreamInstance(maskOvrProvider.getOvrURL(),
                                     ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
                 } else {
+                    LOGGER.info("GeoTiffReader.read - maskOvrProvider && not isExternalOverview");
                     pbjRead.add(maskOvrProvider.getInputStreamSpi().createInputStreamInstance(
                             maskOvrProvider.getFileURL(), ImageIO.getUseCache(),
                             ImageIO.getCacheDirectory()));
@@ -639,13 +644,17 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                 pbjRead.add(maskOvrProvider.getOverviewIndex(imageChoice));
             } else {
                 if (extOvrImgChoice >= 0 && imageChoice >= extOvrImgChoice) {
+                    LOGGER.info("GeoTiffReader.read - not maskOvrProvider - " + extOvrImgChoice + " - " + imageChoice);
                     pbjRead.add(ovrInStreamSPI.createInputStreamInstance(ovrSource,
                             ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
                     pbjRead.add(imageChoice - extOvrImgChoice);
                 } else {
                     if (source instanceof ImageInputStream) {
+                        LOGGER.info("GeoTiffReader.read - not maskOvrProvider - ImageInputStream");
+                        ((ImageInputStream)source).seek(0L);
                         pbjRead.add(source);
                     } else {
+                        LOGGER.info("GeoTiffReader.read - not maskOvrProvider - not ImageInputStream");
                         pbjRead.add(inStreamSPI != null ? inStreamSPI.createInputStreamInstance(source,
                                 ImageIO.getUseCache(), ImageIO.getCacheDirectory()) : ImageIO
                                 .createImageInputStream(source));
@@ -653,6 +662,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                     // Setting correct ImageChoice (taking into account overviews and masks)
                     int overviewImageIndex = dtLayout.getInternalOverviewImageIndex(imageChoice);
                     int index = overviewImageIndex >= 0 ? overviewImageIndex : 0;
+                    LOGGER.info("GeoTiffReader.read - image index " + index);
                     pbjRead.add(index);
                 }
             }

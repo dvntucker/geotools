@@ -299,6 +299,10 @@ public class GeoTiffFormat extends AbstractGridFormat implements Format {
 				if (LOGGER.isLoggable(Level.WARNING))
 					LOGGER.log(Level.WARNING, e.getLocalizedMessage(), e);
 				return null;
+			} catch (IOException ioe) {
+				if (LOGGER.isLoggable(Level.WARNING))
+					LOGGER.log(Level.WARNING, ioe.getLocalizedMessage(), ioe);
+				return null;
 			}
 		}
 		try {
