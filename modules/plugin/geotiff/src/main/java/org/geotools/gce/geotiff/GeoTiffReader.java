@@ -218,11 +218,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
 
             if (input instanceof URL) {
                 final URL sourceURL = (URL) input;
-                if ("s3".equals(sourceURL.getProtocol())) {
-                    source = new S3ImageInputStreamImpl(sourceURL);
-                } else {
-                    source = DataUtilities.urlToFile(sourceURL);
-                }
+                source = DataUtilities.urlToFile(sourceURL);
 			}
 			closeMe = true;
 

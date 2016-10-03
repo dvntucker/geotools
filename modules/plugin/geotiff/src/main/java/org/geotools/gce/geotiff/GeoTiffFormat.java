@@ -291,9 +291,6 @@ public class GeoTiffFormat extends AbstractGridFormat implements Format {
 				if ("file".equals(url.getProtocol())) {
 					final File file = DataUtilities.urlToFile(url);
 					return new GeoTiffReader(file, hints);
-				} else if ("s3".equals(url.getProtocol())) {
-					S3ImageInputStreamImpl s3is = new S3ImageInputStreamImpl(url);
-					return new GeoTiffReader(s3is, hints);
 				}
 			} catch (DataSourceException e) {
 				if (LOGGER.isLoggable(Level.WARNING))
