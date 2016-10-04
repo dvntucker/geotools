@@ -212,7 +212,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                     source = DataUtilities.urlToFile(new URL((String)input));
                 } else if (((String) input).toLowerCase().startsWith("s3:")) {
                     LOGGER.info("Found S3 URL");
-                    source = new S3ImageInputStreamImpl((String)input);
+                    source = new String((String) input);
                 }
             }
 
@@ -317,7 +317,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             final IIOMetadata iioMetadata = reader.getImageMetadata(0);
             final GeoTiffIIOMetadataDecoder metadata = new GeoTiffIIOMetadataDecoder(iioMetadata);
             gtcs = new GeoTiffMetadata2CRSAdapter(hints);
-            
+
             // //
             //
             // get the CRS INFO
@@ -329,15 +329,14 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                 if (LOGGER.isLoggable(Level.FINE))
                     LOGGER.log(Level.FINE, "Using forced coordinate reference system");
             } else {
-            	
-            	// check external prj first
+                // check external prj first
             	crs = getCRS(source);
-                                
+
             	// now, if we did not want to override the inner CRS or we did not have any external PRJ at hand
             	// let's look inside the geotiff
                 if (!OVERRIDE_INNER_CRS || crs==null){
                 	if(metadata.hasGeoKey()&& gtcs != null){
-                	    crs = gtcs.createCoordinateSystem(metadata);
+                        crs = gtcs.createCoordinateSystem(metadata);
                 	}
                 }
 
@@ -350,12 +349,11 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             if (metadata.hasNoData()){
                 noData = metadata.getNoData();
             }
-            
+
             // 
             // parse and set layout
             // 
             setLayout(reader);
-            
             //
             // parse TIFF StreamMetadata
             //
@@ -377,6 +375,11 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                         path.length() - 4)));
                 hasMaskOvrProvider = true;
             }
+            if (inputFile == null && source instanceof String) {
+                String strSource = (String) source;
+                maskOvrProvider = new MaskOverviewProvider(dtLayout, strSource);
+                hasMaskOvrProvider = true;
+            }
             
             // //
             //
@@ -384,6 +387,7 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
             // computing the resolution
             // //
             numOverviews = hasMaskOvrProvider ? maskOvrProvider.getNumOverviews() : dtLayout.getNumInternalOverviews();
+            LOGGER.info("Number of Overviews: " + numOverviews);
             int hrWidth = reader.getWidth(0);
             int hrHeight = reader.getHeight(0);
             final Rectangle actualDim = new Rectangle(0, 0, hrWidth, hrHeight);
@@ -633,9 +637,16 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                                     ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
                 } else {
                     LOGGER.info("GeoTiffReader.read - maskOvrProvider && not isExternalOverview");
-                    pbjRead.add(maskOvrProvider.getInputStreamSpi().createInputStreamInstance(
-                            maskOvrProvider.getFileURL(), ImageIO.getUseCache(),
-                            ImageIO.getCacheDirectory()));
+
+                    if (source instanceof String) {
+                        pbjRead.add(inStreamSPI != null ? inStreamSPI.createInputStreamInstance(maskOvrProvider.getOvrString(),
+                                ImageIO.getUseCache(), ImageIO.getCacheDirectory()) : ImageIO
+                                .createImageInputStream(source));
+                    } else {
+                        pbjRead.add(maskOvrProvider.getInputStreamSpi().createInputStreamInstance(
+                                maskOvrProvider.getFileURL(), ImageIO.getUseCache(),
+                                ImageIO.getCacheDirectory()));
+                    }
                 }
                 pbjRead.add(maskOvrProvider.getOverviewIndex(imageChoice));
             } else {
