@@ -25,11 +25,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.net.URLDecoder;
+import java.net.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,8 +46,8 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import it.geosolutions.imageio.stream.input.s3.S3File;
 import org.geotools.data.DataAccessFactory.Param;
-import org.geotools.data.collection.CollectionDataStore;
 import org.geotools.data.collection.CollectionFeatureSource;
 import org.geotools.data.collection.ListFeatureCollection;
 import org.geotools.data.collection.SpatialIndexFeatureCollection;
@@ -63,14 +59,12 @@ import org.geotools.data.simple.SimpleFeatureLocking;
 import org.geotools.data.simple.SimpleFeatureReader;
 import org.geotools.data.simple.SimpleFeatureSource;
 import org.geotools.data.simple.SimpleFeatureStore;
-import org.geotools.data.store.ArrayDataStore;
 import org.geotools.factory.CommonFactoryFinder;
 import org.geotools.factory.Hints;
 import org.geotools.feature.AttributeImpl;
 import org.geotools.feature.AttributeTypeBuilder;
 import org.geotools.feature.DefaultFeatureCollection;
 import org.geotools.feature.FeatureCollection;
-import org.geotools.feature.FeatureCollections;
 import org.geotools.feature.FeatureIterator;
 import org.geotools.feature.FeatureTypes;
 import org.geotools.feature.GeometryAttributeImpl;
@@ -119,13 +113,11 @@ import org.opengis.filter.sort.SortBy;
 import org.opengis.filter.sort.SortOrder;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.metadata.citation.Citation;
-import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.ReferenceIdentifier;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.ProgressListener;
 
 import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Envelope;
 import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryCollection;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -298,6 +290,9 @@ public class DataUtilities {
      */
     public static URL fileToURL(File file) {
         try {
+            if (file instanceof S3File) {
+                return DataUtilities.stringToUrl(file.getAbsolutePath());
+            }
             URL url = file.toURI().toURL();
             String string = url.toExternalForm();
             if (string.contains("+")) {
@@ -335,7 +330,7 @@ public class DataUtilities {
      * @return a File that corresponds to the URL's location
      */
     public static File urlToFile(URL url) {
-        if (!"file".equals(url.getProtocol())) {
+        if (url == null || (!"file".equals(url.getProtocol()) && !"s3".equals(url.getProtocol()))) {
             return null; // not a File URL
         }
         String string = url.toExternalForm();
@@ -351,6 +346,9 @@ public class DataUtilities {
             throw new RuntimeException("Could not decode the URL to UTF-8 format", e);
         }
 
+        if ("s3".equals(url.getProtocol())) {
+            return new S3File(string);
+        }
         String path3;
 
         String simplePrefix = "file:/";
@@ -379,6 +377,66 @@ public class DataUtilities {
         }
 
         return new File(path3);
+    }
+
+    /**
+     * Creates a new URL from a string. This is mostly to work around known issues with registering
+     * protocol handlers within Tomcat.
+     *
+     * @param str
+     * @return URL
+     */
+    public static URL stringToUrl(String str) {
+
+        URL url = null;
+        if (str == null) {
+            return url;
+        }
+
+        try {
+            url = new URL(str);
+        } catch (MalformedURLException e) {
+        }
+        if (url == null && str.toLowerCase().startsWith("s3:")) {
+            String[] parts = str.split("/");
+            String protocol = parts[0].replace(":","");
+
+            int idx = 1;
+
+            // Handle both s3:/<bucket>/<key> and s3://<bucket>/<key>
+            if ("".equals(parts[idx])) idx++;
+
+            String host = parts[idx++];
+            int port = -1;
+            StringBuilder fileBuilder = new StringBuilder();
+
+            for (; idx < parts.length; idx++) {
+                fileBuilder.append('/').append(parts[idx]);
+            }
+            String file = fileBuilder.toString();
+            if (host.contains(":")) {
+                parts = host.split(":",2);
+                host = parts[0];
+                port = Integer.parseInt(parts[1]);
+            }
+
+            URLStreamHandler handler = new it.geosolutions.imageio.stream.input.s3.Handler();
+            try {
+                url = new URL(protocol, host , port, file, handler);
+            } catch (MalformedURLException e) {
+
+            }
+        }
+        return url;
+    }
+
+
+    public static File stringToFile(String str) {
+        if (str.toLowerCase().startsWith("s3:") || str.toLowerCase().startsWith("file:")) {
+            return urlToFile(stringToUrl(str));
+        } else {
+            return new File(str);
+        }
     }
 
     /**

@@ -35,6 +35,7 @@ import org.apache.commons.io.filefilter.HiddenFileFilter;
 import org.apache.commons.io.filefilter.IOFileFilter;
 import org.apache.commons.io.filefilter.TrueFileFilter;
 import org.apache.commons.io.filefilter.WildcardFileFilter;
+import org.geotools.data.DataUtilities;
 import org.geotools.gce.image.WorldImageFormat;
 import org.geotools.gce.imagemosaic.Utils.Prop;
 
@@ -111,7 +112,7 @@ public class ImageMosaicDirectoryWalker extends ImageMosaicWalker {
             try {
                 // start walking directories
                 for (String indexingDirectory : indexingDirectories) {
-                    walk(new File(indexingDirectory), null);
+                    walk(DataUtilities.stringToFile(indexingDirectory), null);
 
                     // did we cancel?
                     if (getStop()) {
@@ -180,7 +181,7 @@ public class ImageMosaicDirectoryWalker extends ImageMosaicWalker {
             String[] indexDirectories = indexDirs.split("\\s*,\\s*");
             for (String indexingDirectory : indexDirectories) {
                 indexingDirectory = Utils.checkDirectory(indexingDirectory, false);
-                final File directoryToScan = new File(indexingDirectory);
+                final File directoryToScan = DataUtilities.stringToFile(indexingDirectory);
                 final Collection files = FileUtils.listFiles(directoryToScan, finalFilter,
                         Boolean.parseBoolean(
                                 configHandler.getRunConfiguration().getParameter(Prop.RECURSIVE))

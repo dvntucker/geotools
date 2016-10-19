@@ -103,10 +103,10 @@ public enum PathType {
                 }
 
             } catch (MalformedURLException e) {
-                return null;
+//                return null;
             }
-        }
-
+            return DataUtilities.stringToUrl(location);
+       }
     };
 
     /** Logger. */

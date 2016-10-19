@@ -50,7 +50,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -70,7 +69,6 @@ import javax.imageio.ImageReader;
 import javax.imageio.metadata.IIOMetadata;
 import javax.imageio.spi.ImageInputStreamSpi;
 import javax.imageio.stream.ImageInputStream;
-import javax.imageio.stream.ImageInputStreamImpl;
 import javax.media.jai.ImageLayout;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
@@ -205,15 +203,8 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
 			
 			// setting source
             if (input instanceof String) {
-                LOGGER.info("Checking if string is URL - " + (String)input);
-
-                if (((String) input).toLowerCase().startsWith("file:")) {
-                    LOGGER.info("Found file URL");
-                    source = DataUtilities.urlToFile(new URL((String)input));
-                } else if (((String) input).toLowerCase().startsWith("s3:")) {
-                    LOGGER.info("Found S3 URL");
-                    source = new String((String) input);
-                }
+                URL sourceURL = DataUtilities.stringToUrl((String)input);
+                source = DataUtilities.urlToFile(sourceURL);
             }
 
             if (input instanceof URL) {
@@ -373,11 +364,6 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                 String path = dtLayout.getExternalMasks().getAbsolutePath();
                 maskOvrProvider = new MaskOverviewProvider(dtLayout, new File(path.substring(0,
                         path.length() - 4)));
-                hasMaskOvrProvider = true;
-            }
-            if (inputFile == null && source instanceof String) {
-                String strSource = (String) source;
-                maskOvrProvider = new MaskOverviewProvider(dtLayout, strSource);
                 hasMaskOvrProvider = true;
             }
             
@@ -637,16 +623,9 @@ public class GeoTiffReader extends AbstractGridCoverage2DReader implements GridC
                                     ImageIO.getUseCache(), ImageIO.getCacheDirectory()));
                 } else {
                     LOGGER.info("GeoTiffReader.read - maskOvrProvider && not isExternalOverview");
-
-                    if (source instanceof String) {
-                        pbjRead.add(inStreamSPI != null ? inStreamSPI.createInputStreamInstance(maskOvrProvider.getOvrString(),
-                                ImageIO.getUseCache(), ImageIO.getCacheDirectory()) : ImageIO
-                                .createImageInputStream(source));
-                    } else {
-                        pbjRead.add(maskOvrProvider.getInputStreamSpi().createInputStreamInstance(
-                                maskOvrProvider.getFileURL(), ImageIO.getUseCache(),
-                                ImageIO.getCacheDirectory()));
-                    }
+                    pbjRead.add(maskOvrProvider.getInputStreamSpi().createInputStreamInstance(
+                            maskOvrProvider.getFileURL(), ImageIO.getUseCache(),
+                            ImageIO.getCacheDirectory()));
                 }
                 pbjRead.add(maskOvrProvider.getOverviewIndex(imageChoice));
             } else {

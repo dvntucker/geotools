@@ -114,7 +114,7 @@ public class MaskOverviewProvider {
         this.layout = layout;
 
         // Handling Overviews
-        File overviewFile = new File(inputFile.getAbsolutePath() + OVR_EXTENSION);
+        File overviewFile = DataUtilities.stringToFile(inputFile.getAbsolutePath() + OVR_EXTENSION);
         hasDatasetLayout = layout != null;
         if (hasDatasetLayout && layout.getExternalOverviews() != null) {
             overviewFile = layout.getExternalOverviews();

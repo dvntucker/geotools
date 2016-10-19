@@ -933,7 +933,8 @@ public class Utils {
     public static String checkDirectory(String testingDirectory, boolean writable)
             throws IllegalArgumentException {
 
-        File inDir = new File(testingDirectory);
+        File inDir = DataUtilities.stringToFile(testingDirectory);
+        LOGGER.warning("inDir - " + inDir.getClass());
         boolean failure = !inDir.exists() || !inDir.isDirectory() || inDir.isHidden()
                 || !inDir.canRead();
         if (writable) {
@@ -957,7 +958,7 @@ public class Utils {
         if (!testingDirectory.endsWith(File.separator))
             testingDirectory = testingDirectory + File.separator;
         // test to see if things are still good
-        inDir = new File(testingDirectory);
+        inDir = DataUtilities.stringToFile(testingDirectory);
         failure = !inDir.exists() || !inDir.isDirectory() || inDir.isHidden() || !inDir.canRead();
         if (writable) {
             failure |= !inDir.canWrite();
