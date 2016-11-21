@@ -126,6 +126,20 @@
       </properties>
     </profile>
     <profile>
+      <id>geoserver-ec-s3</id>
+
+      <distributionManagement>
+        <repository>
+          <id>geoserver-ec-s3</id>
+          <url>s3://geoserver-ec-s3/snapshot</url>
+        </repository>
+        <snapshotRepository>
+          <id>geoserver-ec-s3</id>
+          <url>s3://geoserver-ec-s3/snapshot</url>
+        </snapshotRepository>
+      </distributionManagement>
+    </profile>
+    <profile>
       <id>skip.image.tests</id>
       <properties>
         <skip.image.tests>true</skip.image.tests>
@@ -1311,6 +1325,11 @@
         <groupId>org.apache.maven.wagon</groupId>
         <artifactId>wagon-webdav</artifactId>
         <version>1.0-beta-2</version>
+      </extension>
+      <extension>
+        <groupId>org.kuali.maven.wagons</groupId>
+        <artifactId>maven-s3-wagon</artifactId>
+        <version>1.2.1</version>
       </extension>
     </extensions>
 

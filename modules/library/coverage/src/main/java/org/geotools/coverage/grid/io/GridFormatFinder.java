@@ -185,8 +185,12 @@ public final class GridFormatFinder {
  			final AbstractGridFormat retVal = spi.createFormat();
  			// check if we can accept it
  			if (retVal instanceof AbstractGridFormat) {
- 				if (retVal.accepts(o,hints))
- 					formats.add(retVal);
+                try {
+                    if (retVal.accepts(o,hints))
+                        formats.add(retVal);
+                } catch (Exception e) {
+                    //jdfalsda
+                }
  			}
 
  		}

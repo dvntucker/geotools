@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -34,6 +36,7 @@ import javax.imageio.stream.MemoryCacheImageOutputStream;
 
 import org.geotools.resources.Classes;
 import org.geotools.util.Utilities;
+import org.geotools.util.logging.Logging;
 
 import com.sun.media.imageioimpl.common.PackageUtil;
 
@@ -58,6 +61,8 @@ public class ImageIOExt {
     static Long filesystemThreshold = null;
 
     static File cacheDirectory = null;
+
+    private static final Logger LOGGER = Logging.getLogger(ImageIOExt.class);
 
     /**
      * Builds a {@link ImageOutputStream} writing to <code>destination</code>, based on logic that
@@ -245,8 +250,10 @@ public class ImageIOExt {
                             }
                         }
                     } catch (Throwable t) {
-                        //eat exception, need to try the next SPI
-
+                        LOGGER.log(Level.FINE,
+                            "Tried ImageInputStreamSpi " + spi.getClass().toString() +
+                                " and it failed.",
+                            t);
                     } finally {
                         //Make sure to close the created stream
                         if (stream != null){
