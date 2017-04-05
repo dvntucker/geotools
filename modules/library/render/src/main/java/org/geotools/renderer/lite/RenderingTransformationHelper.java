@@ -110,7 +110,7 @@ public abstract class RenderingTransformationHelper {
                     final GridCoverage2DReader reader = (GridCoverage2DReader) GRID_PROPERTY_NAME.evaluate(gridWrapper);
                     // don't read more than the native resolution (in case we are oversampling)
                     if(CRS.equalsIgnoreMetadata(reader.getCoordinateReferenceSystem(), gridGeometry.getCoordinateReferenceSystem())) {
-                         MathTransform g2w = reader.getOriginalGridToWorld(PixelInCell.CELL_CENTER);
+                         MathTransform g2w = reader.getOriginalGridToWorld(PixelInCell.CELL_CORNER);
                          if(g2w instanceof AffineTransform2D && readGG.getGridToCRS2D() instanceof AffineTransform2D) {
                              AffineTransform2D atOriginal = (AffineTransform2D) g2w;
                              AffineTransform2D atMap = (AffineTransform2D) readGG.getGridToCRS2D(); 
